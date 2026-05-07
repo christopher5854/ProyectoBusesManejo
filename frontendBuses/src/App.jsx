@@ -5,11 +5,11 @@ import './App.css'
 
 function App() {
   return (
-    <div clasName="App">
+    <div className="App">
       <UserProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element ={<>Pagina Inicio </>} />
+            <Route path="/" element ={<Home/>} />
             <Route path="*" element ={<>NOT FOUND </>} />
             <Route path= "/home" element ={<Home/>} />
           </Routes>

@@ -15,11 +15,15 @@ export const UserProvider = ({children}) => {
         rol:'',
         activo:'',
         tipo:'',
-        coperativa:''
+        cooperativa:''
+    })
+
+    const [cooperativa, setCooperativa] = useState({
+        nombre: ''
     })
 
     return (
-        <UserContext.Provider value={{usuario, setUsuario}}>
+        <UserContext.Provider value={{usuario, setUsuario, cooperativa, setCooperativa}}>
             {children}
         </UserContext.Provider>
     );

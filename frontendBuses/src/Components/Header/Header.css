@@ -1,0 +1,108 @@
+/* ── Contenedor principal ── */
+.header {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  color: #111827 !important;
+  box-shadow: none !important;
+}
+
+.header__toolbar {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 8px 32px !important;
+  min-height: 60px !important;
+}
+
+/* ── Logo ── */
+.header__logo {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.header__logo-icon {
+  width: 36px !important;
+  height: 36px !important;
+  background-color: #B91C1C !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.header__logo-bus-icon {
+  color: #ffffff !important;
+  font-size: 20px !important;
+}
+
+.header__logo-name {
+  font-family: 'Sora', sans-serif !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  color: #111827 !important;
+}
+
+.header__logo-sub {
+  font-size: 10px !important;
+  color: #6b7280 !important;
+  line-height: 1 !important;
+  letter-spacing: 0.04em !important;
+}
+
+/* ── Nav links ── */
+.header__nav {
+  display: flex !important;
+  gap: 24px !important;
+  align-items: center !important;
+}
+
+.header__nav-link {
+  font-size: 13px !important;
+  color: #6b7280 !important;
+  cursor: pointer !important;
+  transition: color 0.2s !important;
+}
+
+.header__nav-link:hover {
+  color: #111827 !important;
+}
+
+/* ── Botones ── */
+.header__actions {
+  display: flex !important;
+  gap: 8px !important;
+  align-items: center !important;
+}
+
+.header__btn-ghost {
+  border-color: #e5e7eb !important;
+  color: #111827 !important;
+  text-transform: none !important;
+  border-radius: 8px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  padding: 6px 16px !important;
+}
+
+.header__btn-ghost:hover {
+  border-color: #9ca3af !important;
+  background-color: #f9fafb !important;
+}
+
+.header__btn-primary {
+  background-color: #B91C1C !important;
+  color: #ffffff !important;
+  text-transform: none !important;
+  border-radius: 8px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  padding: 6px 16px !important;
+  box-shadow: none !important;
+}
+
+.header__btn-primary:hover {
+  background-color: #991B1B !important;
+  box-shadow: none !important;
+}
