@@ -1,0 +1,167 @@
+/* ── Contenedor ── */
+.footer {
+  background-color: #111827;
+  padding: 3rem 2rem 1.5rem;
+}
+
+/* ── Parte superior ── */
+.footer__top {
+  display: grid !important;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+/* ── Brand ── */
+.footer__brand {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px;
+}
+
+.footer__logo {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px;
+}
+
+.footer__logo-icon {
+  width: 34px !important;
+  height: 34px !important;
+  background-color: #B91C1C !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.footer__logo-bus {
+  color: #ffffff !important;
+  font-size: 18px !important;
+}
+
+.footer__logo-name {
+  font-family: 'Sora', sans-serif !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+}
+
+.footer__brand-desc {
+  font-size: 12px !important;
+  color: #9ca3af !important;
+  line-height: 1.6 !important;
+  max-width: 260px;
+}
+
+/* ── Redes sociales ── */
+.footer__socials {
+  display: flex !important;
+  gap: 8px !important;
+  margin-top: 4px;
+}
+
+.footer__social-btn {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 8px !important;
+  background-color: #1f2937 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.footer__social-btn:hover {
+  background-color: #B91C1C !important;
+}
+
+.footer__social-icon {
+  font-size: 16px !important;
+  color: #9ca3af !important;
+  transition: color 0.2s;
+}
+
+.footer__social-btn:hover .footer__social-icon {
+  color: #ffffff !important;
+}
+
+/* ── Columnas de links ── */
+.footer__col {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px;
+}
+
+.footer__col-title {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #ffffff !important;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px !important;
+}
+
+.footer__link {
+  font-size: 13px !important;
+  color: #9ca3af !important;
+  cursor: pointer;
+  transition: color 0.2s;
+  width: fit-content;
+}
+
+.footer__link:hover {
+  color: #ffffff !important;
+}
+
+/* ── Divider ── */
+.footer__divider {
+  height: 1px;
+  background-color: #1f2937;
+  margin-bottom: 1.25rem;
+}
+
+/* ── Parte inferior ── */
+.footer__bottom {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+.footer__copy {
+  font-size: 12px !important;
+  color: #6b7280 !important;
+}
+
+.footer__powered {
+  font-size: 12px !important;
+  color: #6b7280 !important;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .footer__top {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .footer__brand {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer__top {
+    grid-template-columns: 1fr !important;
+  }
+
+  .footer__brand {
+    grid-column: span 1;
+  }
+
+  .footer__bottom {
+    flex-direction: column !important;
+    gap: 6px;
+    text-align: center;
+  }
+}
