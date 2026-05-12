@@ -1,0 +1,118 @@
+/* ── Contenedor ── */
+.cta {
+  margin: 2.5rem 2rem;
+  background-color: #B91C1C;
+  border-radius: 16px;
+  padding: 2rem 2.5rem;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Decoración de fondo ── */
+.cta::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+}
+
+.cta::after {
+  content: '';
+  position: absolute;
+  bottom: -60px;
+  right: 120px;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.04);
+  pointer-events: none;
+}
+
+/* ── Texto ── */
+.cta__text {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px;
+  z-index: 1;
+}
+
+.cta__title {
+  font-family: 'Sora', sans-serif !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+}
+
+.cta__subtitle {
+  font-size: 13px !important;
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+/* ── Botones ── */
+.cta__actions {
+  display: flex !important;
+  gap: 8px !important;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.cta__btn-primary {
+  background-color: #ffffff !important;
+  color: #B91C1C !important;
+  text-transform: none !important;
+  border-radius: 8px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  padding: 8px 20px !important;
+  box-shadow: none !important;
+  white-space: nowrap;
+}
+
+.cta__btn-primary:hover {
+  background-color: #f9fafb !important;
+  box-shadow: none !important;
+}
+
+.cta__btn-secondary {
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  color: #ffffff !important;
+  text-transform: none !important;
+  border-radius: 8px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  padding: 8px 20px !important;
+  white-space: nowrap;
+}
+
+.cta__btn-secondary:hover {
+  border-color: rgba(255, 255, 255, 0.7) !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .cta {
+    flex-direction: column !important;
+    text-align: center;
+    padding: 1.5rem !important;
+  }
+
+  .cta__actions {
+    flex-direction: column !important;
+    width: 100%;
+  }
+
+  .cta__btn-primary,
+  .cta__btn-secondary {
+    width: 100% !important;
+  }
+}
