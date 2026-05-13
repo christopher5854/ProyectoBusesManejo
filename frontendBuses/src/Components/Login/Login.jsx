@@ -73,7 +73,7 @@ const Login = () => {
       });
 
       redirigirPorRol(data.usuario.rol);
-    } catch (requestError) {
+    } catch {
       setError('No se pudo conectar con el servidor');
     } finally {
       setLoading(false);
