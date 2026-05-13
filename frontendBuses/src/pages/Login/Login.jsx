@@ -1,14 +1,5 @@
-"use client";
-import './Login.css';
+import LoginView from '../../Components/Login';
 
-const Login = () => {
-	return (
-		<div className='login'>
- 			Login works!
- 		</div>
-	);
-};
-
-Login.propTypes = {};
+const Login = () => <LoginView />;
 
 export default Login;
