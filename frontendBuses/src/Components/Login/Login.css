@@ -1,0 +1,123 @@
+.login {
+  min-height: 100vh;
+  background-color: #f9fafb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.login__card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+}
+
+.login__logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1.75rem;
+}
+
+.login__logo-icon {
+  width: 58px;
+  height: 58px;
+  background-color: #b91c1c;
+  border-radius: 14px;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  letter-spacing: 0.08em;
+}
+
+.login__logo-name {
+  font-family: 'Sora', sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  color: #111827 !important;
+  line-height: 1 !important;
+}
+
+.login__logo-sub {
+  font-size: 12px !important;
+  color: #6b7280 !important;
+  margin-top: 3px !important;
+}
+
+.login__title {
+  font-family: 'Sora', sans-serif !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  color: #111827 !important;
+  margin-bottom: 4px !important;
+}
+
+.login__subtitle {
+  font-size: 13px !important;
+  color: #6b7280 !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.login__alert {
+  margin-bottom: 1rem !important;
+  font-size: 13px !important;
+}
+
+.login__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.login__field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.login__label {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  color: #6b7280 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.login__input .MuiOutlinedInput-root {
+  border-radius: 8px !important;
+  font-size: 13px !important;
+}
+
+.login__input .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #b91c1c !important;
+}
+
+.login__btn {
+  background-color: #b91c1c !important;
+  text-transform: none !important;
+  border-radius: 8px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  padding: 10px !important;
+  box-shadow: none !important;
+  margin-top: 4px !important;
+}
+
+.login__btn:hover {
+  background-color: #991b1b !important;
+  box-shadow: none !important;
+}
+
+.login__btn:disabled {
+  background-color: #e5e7eb !important;
+  color: #9ca3af !important;
+}

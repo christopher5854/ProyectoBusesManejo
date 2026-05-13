@@ -2,9 +2,12 @@
 //import { useContext, useState } from "react";
 import {AppBar,Toolbar,Typography,Button,Box,} from "@mui/material";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
+import { useNavigate } from 'react-router-dom';
 import './Header.css';
 
 const Header = () => {
+  const navigate = useNavigate();
+
   return (
     <AppBar position="static" elevation={0} className="header">
       <Toolbar className="header__toolbar">
@@ -33,7 +36,12 @@ const Header = () => {
 
         {/* Actions */}
         <Box className="header__actions">
-          <Button variant="outlined" size="small" className="header__btn-ghost">
+          <Button
+            variant="outlined"
+            size="small"
+            className="header__btn-ghost"
+            onClick={() => navigate('/login')}
+          >
             Iniciar sesión
           </Button>
           <Button variant="contained" size="small" className="header__btn-primary">
