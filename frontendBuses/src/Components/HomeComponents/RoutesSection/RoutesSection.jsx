@@ -5,64 +5,20 @@ import ChairIcon from "@mui/icons-material/Chair";
 import PlaceIcon from "@mui/icons-material/Place";
 import './RoutesSection.css';
 
-const rutas = [
-  {
-    tipo: "directo",
-    precio: "$5.00",
-    origen: "Ambato",
-    destino: "Quito",
-    duracion: "2h 30min",
-    asiento: "Normal / VIP",
-    paradas: null,
-  },
-  {
-    tipo: "paradas",
-    precio: "$3.50",
-    origen: "Ambato",
-    destino: "Guayaquil",
-    duracion: "6h 30min",
-    asiento: "Normal",
-    paradas: "Riobamba · Cuenca",
-  },
-  {
-    tipo: "directo",
-    precio: "$3.00",
-    origen: "Pelileo",
-    destino: "Quito",
-    duracion: "2h 00min",
-    asiento: "Normal",
-    paradas: null,
-  },
-  {
-    tipo: "paradas",
-    precio: "$2.50",
-    origen: "Baños",
-    destino: "Quito",
-    duracion: "3h 00min",
-    asiento: "Normal",
-    paradas: "Ambato · Latacunga",
-  },
-  {
-    tipo: "directo",
-    precio: "$4.50",
-    origen: "Ambato",
-    destino: "Riobamba",
-    duracion: "1h 30min",
-    asiento: "Normal / VIP",
-    paradas: null,
-  },
-  {
-    tipo: "paradas",
-    precio: "$6.00",
-    origen: "Ambato",
-    destino: "Loja",
-    duracion: "8h 00min",
-    asiento: "Normal",
-    paradas: "Riobamba · Cuenca",
-  },
-];
+
+
+import { useState, useEffect } from "react";
 
 const RoutesSection = () => {
+  const [rutas, setRutas] = useState([]);
+
+  useEffect(() => {
+    fetch("http://localhost:3000/api/rutas")
+      .then((res) => res.json())
+      .then((data) => setRutas(data))
+      .catch((err) => console.error("Error al obtener rutas:", err));
+  }, []);
+
   return (
     <section className="routes">
 
@@ -74,50 +30,52 @@ const RoutesSection = () => {
 
       {/* Grid de tarjetas */}
       <Box className="routes__grid">
-        {rutas.map((ruta, index) => (
-          <Box key={index} className="routes__card">
-
-            {/* Top: badge + precio */}
-            <Box className="routes__card-top">
-              <Chip
-                label={ruta.tipo === "directo" ? "Directo" : "Con paradas"}
-                size="small"
-                className={
-                  ruta.tipo === "directo"
-                    ? "routes__badge-directo"
-                    : "routes__badge-paradas"
-                }
-              />
-              <Typography className="routes__precio">{ruta.precio}</Typography>
-            </Box>
-
-            {/* Ruta: origen → destino */}
-            <Box className="routes__ruta">
-              <Typography className="routes__ciudad">{ruta.origen}</Typography>
-              <Typography className="routes__flecha">→</Typography>
-              <Typography className="routes__ciudad">{ruta.destino}</Typography>
-            </Box>
-
-            {/* Chips de info */}
-            <Box className="routes__chips">
-              <Box className="routes__chip">
-                <AccessTimeIcon className="routes__chip-icon" />
-                <Typography className="routes__chip-text">{ruta.duracion}</Typography>
+        {rutas.length > 0 ? (
+          rutas.map((ruta, index) => (
+            <Box key={ruta.ruta_id || index} className="routes__card">
+  
+              {/* Top: badge + precio */}
+              <Box className="routes__card-top">
+                <Chip
+                  label={ruta.estado || "Disponible"}
+                  size="small"
+                  className={
+                    ruta.estado === "Cancelado"
+                      ? "routes__badge-paradas"
+                      : "routes__badge-directo"
+                  }
+                />
+                <Typography className="routes__precio">${ruta.precio}</Typography>
               </Box>
-              <Box className="routes__chip">
-                <ChairIcon className="routes__chip-icon" />
-                <Typography className="routes__chip-text">{ruta.asiento}</Typography>
+  
+              {/* Ruta: origen → destino */}
+              <Box className="routes__ruta">
+                <Typography className="routes__ciudad">{ruta.ciudad_origen}</Typography>
+                <Typography className="routes__flecha">→</Typography>
+                <Typography className="routes__ciudad">{ruta.ciudad_destino}</Typography>
               </Box>
-              {ruta.paradas && (
+  
+              {/* Chips de info */}
+              <Box className="routes__chips">
+                <Box className="routes__chip">
+                  <AccessTimeIcon className="routes__chip-icon" />
+                  <Typography className="routes__chip-text">{ruta.hora_salida}</Typography>
+                </Box>
+                <Box className="routes__chip">
+                  <ChairIcon className="routes__chip-icon" />
+                  <Typography className="routes__chip-text">{ruta.asientos_libres} libres</Typography>
+                </Box>
                 <Box className="routes__chip">
                   <PlaceIcon className="routes__chip-icon" />
-                  <Typography className="routes__chip-text">{ruta.paradas}</Typography>
+                  <Typography className="routes__chip-text">{new Date(ruta.fecha_ruta).toLocaleDateString()}</Typography>
                 </Box>
-              )}
+              </Box>
+  
             </Box>
-
-          </Box>
-        ))}
+          ))
+        ) : (
+          <Typography className="routes__empty">No hay rutas disponibles en este momento.</Typography>
+        )}
       </Box>
 
     </section>

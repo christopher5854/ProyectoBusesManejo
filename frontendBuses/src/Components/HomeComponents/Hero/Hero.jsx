@@ -1,22 +1,36 @@
 "use client";
-import { useContext } from "react";
+import { useContext, useState, useEffect } from "react";
 import { Box, Typography, Button, TextField, MenuItem, Select, FormControl } from "@mui/material";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import SearchIcon from "@mui/icons-material/Search";
 import { UserContext } from "../../../Context/UserContext";
 import './Hero.css';
 
-
-const rutasFrecuentes = [
-  "Ambato → Quito",
-  "Pelileo → Quito",
-  "Ambato → Guayaquil",
-  "Baños → Quito",
-  "Ambato → Riobamba",
-];
-
 const Hero = () => {
   const { cooperativa } = useContext(UserContext);
+  const [ciudades, setCiudades] = useState([]);
+  const [rutasFrecuentes, setRutasFrecuentes] = useState([]);
+  const [origen, setOrigen] = useState("");
+  const [destino, setDestino] = useState("");
+
+  useEffect(() => {
+    // Fetch Ciudades
+    fetch("http://localhost:3000/api/ciudades")
+      .then((res) => res.json())
+      .then((data) => setCiudades(data))
+      .catch((err) => console.error("Error fetching ciudades:", err));
+
+    // Fetch Rutas para frecuentes
+    fetch("http://localhost:3000/api/rutas")
+      .then((res) => res.json())
+      .then((data) => {
+        // Extraer rutas únicas
+        const unicas = new Set();
+        data.forEach(r => unicas.add(`${r.ciudad_origen} → ${r.ciudad_destino}`));
+        setRutasFrecuentes(Array.from(unicas).slice(0, 5));
+      })
+      .catch((err) => console.error("Error fetching rutas:", err));
+  }, []);
 
   return (
     <section className="hero">
@@ -49,12 +63,19 @@ const Hero = () => {
         <Box className="hero__search-grid">
           <Box className="hero__field">
             <Typography className="hero__field-label">Origen</Typography>
-            <TextField
-              placeholder="Ciudad de salida..."
-              size="small"
-              fullWidth
-              className="hero__input"
-            />
+            <FormControl size="small" fullWidth>
+              <Select
+                value={origen}
+                onChange={(e) => setOrigen(e.target.value)}
+                displayEmpty
+                className="hero__select"
+              >
+                <MenuItem value="" disabled>Ciudad de salida...</MenuItem>
+                {ciudades.map(c => (
+                  <MenuItem key={c.id} value={c.id}>{c.nombre}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Box>
 
           <Box className="hero__swap">
@@ -63,12 +84,19 @@ const Hero = () => {
 
           <Box className="hero__field">
             <Typography className="hero__field-label">Destino</Typography>
-            <TextField
-              placeholder="Ciudad de llegada..."
-              size="small"
-              fullWidth
-              className="hero__input"
-            />
+            <FormControl size="small" fullWidth>
+              <Select
+                value={destino}
+                onChange={(e) => setDestino(e.target.value)}
+                displayEmpty
+                className="hero__select"
+              >
+                <MenuItem value="" disabled>Ciudad de llegada...</MenuItem>
+                {ciudades.map(c => (
+                  <MenuItem key={c.id} value={c.id}>{c.nombre}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Box>
         </Box>
 
