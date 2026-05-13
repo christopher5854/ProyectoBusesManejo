@@ -1,0 +1,139 @@
+/* ── Sección ── */
+.routes {
+  padding: 2.5rem 2rem 3rem;
+}
+
+/* ── Encabezado ── */
+.routes__header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.routes__eyebrow {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  color: #B91C1C !important;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.35rem !important;
+}
+
+.routes__title {
+  font-family: 'Sora', sans-serif !important;
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  color: #111827 !important;
+}
+
+/* ── Grid ── */
+.routes__grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+/* ── Tarjeta ── */
+.routes__card {
+  background-color: #f9fafb !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+
+.routes__card:hover {
+  border-color: #fca5a5 !important;
+  box-shadow: 0 4px 12px rgba(185, 28, 28, 0.08) !important;
+}
+
+/* ── Top badge + precio ── */
+.routes__card-top {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 0.75rem !important;
+}
+
+.routes__badge-directo {
+  background-color: #B91C1C !important;
+  color: #ffffff !important;
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  height: 22px !important;
+}
+
+.routes__badge-paradas {
+  background-color: #f3f4f6 !important;
+  color: #6b7280 !important;
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  height: 22px !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+.routes__precio {
+  font-family: 'Sora', sans-serif !important;
+  font-size: 17px !important;
+  font-weight: 700 !important;
+  color: #B91C1C !important;
+}
+
+/* ── Origen → Destino ── */
+.routes__ruta {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.routes__ciudad {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: #111827 !important;
+}
+
+.routes__flecha {
+  color: #9ca3af !important;
+  font-size: 16px !important;
+}
+
+/* ── Chips de info ── */
+.routes__chips {
+  display: flex !important;
+  gap: 6px !important;
+  flex-wrap: wrap !important;
+}
+
+.routes__chip {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  background-color: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 10px !important;
+  padding: 3px 8px !important;
+}
+
+.routes__chip-icon {
+  font-size: 12px !important;
+  color: #9ca3af !important;
+}
+
+.routes__chip-text {
+  font-size: 11px !important;
+  color: #6b7280 !important;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .routes__grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .routes__grid {
+    grid-template-columns: 1fr !important;
+  }
+}
