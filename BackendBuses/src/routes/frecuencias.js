@@ -3,6 +3,7 @@ const router = express.Router();
 const frecuenciaController = require('../controllers/frecuenciaController');
 const paradaController = require('../controllers/paradaController');
 const hojaRutaController = require('../controllers/hojaRutaController');
+const rutaController = require('../controllers/rutaController');
 
 // Rutas de Frecuencias
 router.get('/', frecuenciaController.listarFrecuencias);
@@ -19,3 +20,10 @@ router.delete('/:frecuenciaId/paradas/:paradaId', paradaController.eliminarParad
 router.get('/hojas-ruta', hojaRutaController.listarHojas);
 router.post('/hojas-ruta', hojaRutaController.crearHojaManual);
 router.post('/hojas-ruta/generar', hojaRutaController.generarAutomatico);
+
+// Rutas de Rutas Diarias
+router.get('/rutas', rutaController.listarRutas);
+router.get('/rutas/:id', rutaController.detalleRuta);
+router.put('/rutas/:id', rutaController.actualizarEstadoRuta);
+
+module.exports = router;
