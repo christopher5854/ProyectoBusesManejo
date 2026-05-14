@@ -31,3 +31,22 @@ const listarFrecuencias = async (req, res) => {
     res.status(500).json({ error: 'Error al listar frecuencias' });
   }
 };
+
+// Crear una nueva frecuencia
+const crearFrecuencia = async (req, res) => {
+  const { cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, duracion_estimada, numero_resolucion, precio, tipo_viaje } = req.body;
+  if (!cooperativa_id || !ciudad_origen_id || !ciudad_destino_id || !hora_salida || !numero_resolucion || !precio) {
+    return res.status(400).json({ error: 'Faltan campos obligatorios' });
+  }
+  try {
+    const result = await pool.query(
+      `INSERT INTO frecuencia (cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, duracion_estimada, numero_resolucion, precio, tipo_viaje, activa)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true) RETURNING *`,
+      [cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, duracion_estimada, numero_resolucion, precio, tipo_viaje || 'Directo']
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al crear frecuencia' });
+  }
+};
