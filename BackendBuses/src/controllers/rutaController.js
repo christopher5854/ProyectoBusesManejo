@@ -1,0 +1,41 @@
+const { pool } = require('../config/db');
+
+// Listar rutas (con filtros)
+const listarRutas = async (req, res) => {
+  const { fecha, cooperativa_id } = req.query;
+  let query = `
+    SELECT r.*, b.placa, f.origen, f.destino, hr.cooperativa_id
+    FROM ruta r
+    JOIN hoja_ruta hr ON r.hoja_ruta_id = hr.id
+    JOIN bus b ON hr.bus_id = b.id
+    JOIN (
+      SELECT f.id, c1.nombre as origen, c2.nombre as destino
+      FROM frecuencia f
+      JOIN ciudad c1 ON f.ciudad_origen_id = c1.id
+      JOIN ciudad c2 ON f.ciudad_destino_id = c2.id
+    ) f ON r.frecuencia_id = f.id
+    WHERE 1=1
+  `;
+  const values = [];
+  if (fecha) {
+    values.push(fecha);
+    query += ` AND r.fecha_ruta = $${values.length}`;
+  }
+  if (cooperativa_id) {
+    values.push(cooperativa_id);
+    query += ` AND hr.cooperativa_id = $${values.length}`;
+  }
+  try {
+    const result = await pool.query(query, values);
+    // Agregar disponibilidad de asientos
+    for (let r of result.rows) {
+      const capacidad = await pool.query(`SELECT capacidad_total FROM bus WHERE id = (SELECT bus_id FROM hoja_ruta WHERE id = $1)`, [r.hoja_ruta_id]);
+      const ocupados = await pool.query(`SELECT COUNT(*) FROM boleto WHERE ruta_id = $1 AND estado_boleto != 'cancelado'`, [r.id]);
+      r.asientos_disponibles = capacidad.rows[0].capacidad_total - parseInt(ocupados.rows[0].count);
+    }
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al listar rutas' });
+  }
+};
