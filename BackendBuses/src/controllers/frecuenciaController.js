@@ -50,3 +50,21 @@ const crearFrecuencia = async (req, res) => {
     res.status(500).json({ error: 'Error al crear frecuencia' });
   }
 };
+
+// Actualizar una frecuencia (activa/desactiva u otros campos)
+const actualizarFrecuencia = async (req, res) => {
+  const { id } = req.params;
+  const { activa, hora_salida, precio } = req.body;
+  try {
+    const result = await pool.query(
+      `UPDATE frecuencia SET activa = COALESCE($1, activa), hora_salida = COALESCE($2, hora_salida), precio = COALESCE($3, precio)
+       WHERE id = $4 RETURNING *`,
+      [activa, hora_salida, precio, id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Frecuencia no encontrada' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al actualizar frecuencia' });
+  }
+};
