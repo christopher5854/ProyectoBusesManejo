@@ -33,3 +33,23 @@ const agregarParada = async (req, res) => {
     res.status(500).json({ error: 'Error al agregar parada' });
   }
 };
+
+const eliminarParada = async (req, res) => {
+  const { frecuenciaId, paradaId } = req.params;
+  try {
+    await pool.query(
+      `DELETE FROM parada_frecuencia WHERE id = $1 AND frecuencia_id = $2`,
+      [paradaId, frecuenciaId]
+    );
+    res.status(204).send();
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al eliminar parada' });
+  }
+};
+
+module.exports = {
+  listarParadas,
+  agregarParada,
+  eliminarParada
+};
