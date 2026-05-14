@@ -1,15 +1,21 @@
 const router = require('express').Router();
-const { pool } = require('../config/db');
+const {
+  getUsuarios,
+  getUsuarioById,
+  createUsuario,
+  updateUsuario,
+  deleteUsuario,
+} = require('../controllers/users.controller');
 
-router.get('/', async (req, res) => {
-  try {
-    const result = await pool.query(
-      'SELECT id, nombres, apellidos, email, activo FROM usuario'
-    );
-    res.json(result.rows);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+// IMPORTANTE: Debes traer AMBOS middlewares
+const { verificarToken, roleGuard } = require('../middlewares/roleGuard');
+
+// --- RUTAS ---
+// Primero verificamos el TOKEN, luego el ROL
+router.get('/',      verificarToken, roleGuard(['admin', 'operador']), getUsuarios);
+router.get('/:id',   verificarToken, roleGuard(['admin', 'operador']), getUsuarioById);
+router.post('/',     verificarToken, roleGuard(['admin']),             createUsuario);
+router.put('/:id',   verificarToken, roleGuard(['admin']),             updateUsuario);
+router.delete('/:id', verificarToken, roleGuard(['admin']),             deleteUsuario);
 
 module.exports = router;
