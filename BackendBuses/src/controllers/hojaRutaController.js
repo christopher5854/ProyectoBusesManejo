@@ -56,3 +56,51 @@ const crearHojaManual = async (req, res) => {
     res.status(500).json({ error: 'Error al crear hoja de ruta manual' });
   }
 };
+
+// Generación automática (round-robin con días de parada)
+const generarAutomatico = async (req, res) => {
+  const { cooperativa_id, fecha_inicio, fecha_fin } = req.body;
+  try {
+    // Obtener frecuencias activas
+    const frecuencias = await pool.query(
+      `SELECT id FROM frecuencia WHERE cooperativa_id = $1 AND activa = true`,
+      [cooperativa_id]
+    );
+    // Obtener buses activos
+    const buses = await pool.query(
+      `SELECT id FROM bus WHERE cooperativa_id = $1 AND activo = true`,
+      [cooperativa_id]
+    );
+    if (frecuencias.rows.length === 0 || buses.rows.length === 0) {
+      return res.status(400).json({ error: 'No hay frecuencias o buses activos para esta cooperativa' });
+    }
+
+    const hojas = [];
+    // Distribución round-robin
+    for (let i = 0; i < frecuencias.rows.length; i++) {
+      const bus = buses.rows[i % buses.rows.length];
+      const result = await pool.query(
+        `INSERT INTO hoja_ruta (cooperativa_id, frecuencia_id, bus_id, fecha_inicio, fecha_fin, generacion, activa)
+         VALUES ($1, $2, $3, $4, $5, 'automatica', true) RETURNING *`,
+        [cooperativa_id, frecuencias.rows[i].id, bus.id, fecha_inicio, fecha_fin]
+      );
+      await generarRutasDiarias(result.rows[0].id, fecha_inicio, fecha_fin);
+      hojas.push(result.rows[0]);
+    }
+    // Días de parada: si hay más buses que frecuencias, los sobrantes se quedan sin asignación
+    const sobrantes = buses.rows.length - frecuencias.rows.length;
+    if (sobrantes > 0) {
+      console.log(`⚠️ ${sobrantes} buses en días de parada (sin hoja de ruta)`);
+    }
+    res.json({ message: `Generadas ${hojas.length} hojas de ruta`, hojas });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error en generación automática' });
+  }
+};
+
+module.exports = {
+  listarHojas,
+  crearHojaManual,
+  generarAutomatico
+};
