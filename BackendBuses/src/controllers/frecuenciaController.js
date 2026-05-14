@@ -68,3 +68,60 @@ const actualizarFrecuencia = async (req, res) => {
     res.status(500).json({ error: 'Error al actualizar frecuencia' });
   }
 };
+
+// Endpoint más importante: búsqueda por origen, destino y fecha
+const buscarFrecuencias = async (req, res) => {
+  const { origen, destino, fecha } = req.query;
+  if (!origen || !destino || !fecha) {
+    return res.status(400).json({ error: 'Faltan parámetros: origen, destino, fecha' });
+  }
+  try {
+    // Obtener IDs de las ciudades
+    const ciudadOrigen = await pool.query('SELECT id FROM ciudad WHERE nombre = $1', [origen]);
+    const ciudadDestino = await pool.query('SELECT id FROM ciudad WHERE nombre = $1', [destino]);
+    if (ciudadOrigen.rows.length === 0 || ciudadDestino.rows.length === 0) {
+      return res.json([]);
+    }
+    const query = `
+      SELECT f.*, 
+             c1.nombre as origen, c2.nombre as destino,
+             co.nombre as cooperativa, co.id as cooperativa_id,
+             b.placa, b.capacidad_total,
+             (SELECT COUNT(*) FROM ruta r WHERE r.frecuencia_id = f.id AND r.fecha_ruta = $3 AND r.estado = 'activo') as tiene_ruta
+      FROM frecuencia f
+      JOIN ciudad c1 ON f.ciudad_origen_id = c1.id
+      JOIN ciudad c2 ON f.ciudad_destino_id = c2.id
+      JOIN cooperativa co ON f.cooperativa_id = co.id
+      LEFT JOIN hoja_ruta hr ON hr.frecuencia_id = f.id AND hr.activa = true
+      LEFT JOIN bus b ON hr.bus_id = b.id
+      WHERE f.ciudad_origen_id = $1
+        AND f.ciudad_destino_id = $2
+        AND f.activa = true
+        AND (hr.fecha_inicio <= $3 AND (hr.fecha_fin IS NULL OR hr.fecha_fin >= $3))
+    `;
+    const result = await pool.query(query, [ciudadOrigen.rows[0].id, ciudadDestino.rows[0].id, fecha]);
+    // Para cada frecuencia, obtener sus paradas intermedias
+    for (let freq of result.rows) {
+      const paradas = await pool.query(
+        `SELECT p.*, c.nombre as ciudad
+         FROM parada_frecuencia p
+         JOIN ciudad c ON p.ciudad_id = c.id
+         WHERE p.frecuencia_id = $1
+         ORDER BY p.orden`,
+        [freq.id]
+      );
+      freq.paradas = paradas.rows;
+    }
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error en búsqueda de frecuencias' });
+  }
+};
+
+module.exports = {
+  listarFrecuencias,
+  crearFrecuencia,
+  actualizarFrecuencia,
+  buscarFrecuencias
+};
