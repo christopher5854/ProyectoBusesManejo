@@ -39,3 +39,26 @@ const listarRutas = async (req, res) => {
     res.status(500).json({ error: 'Error al listar rutas' });
   }
 };
+
+// Detalle de una ruta (incluye disponibilidad)
+const detalleRuta = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(`
+      SELECT r.*, b.capacidad_total, hr.bus_id
+      FROM ruta r
+      JOIN hoja_ruta hr ON r.hoja_ruta_id = hr.id
+      JOIN bus b ON hr.bus_id = b.id
+      WHERE r.id = $1
+    `, [id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Ruta no encontrada' });
+    const ruta = result.rows[0];
+    const ocupados = await pool.query(`SELECT COUNT(*) FROM boleto WHERE ruta_id = $1 AND estado_boleto != 'cancelado'`, [id]);
+    ruta.asientos_ocupados = parseInt(ocupados.rows[0].count);
+    ruta.asientos_disponibles = ruta.capacidad_total - ruta.asientos_ocupados;
+    res.json(ruta);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al obtener detalle de ruta' });
+  }
+};
