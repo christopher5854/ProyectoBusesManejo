@@ -14,6 +14,7 @@ app.use('/api/rutas',      require('./routes/rutas'));
 app.use('/api/boletos',    require('./routes/boletos'));
 app.use('/api/usuarios',   require('./routes/usuarios'));
 app.use('/api/ciudades',   require('./routes/ciudades'));
+app.use('/api/auth',       require('./routes/auth.routes'));
 
 app.get('/', (req, res) => {
   res.json({ mensaje: 'API TransiSys funcionando' });
