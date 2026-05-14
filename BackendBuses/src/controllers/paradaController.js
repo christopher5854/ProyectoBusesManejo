@@ -17,3 +17,19 @@ const listarParadas = async (req, res) => {
     res.status(500).json({ error: 'Error al listar paradas' });
   }
 };
+
+const agregarParada = async (req, res) => {
+  const { frecuenciaId } = req.params;
+  const { ciudad_id, orden, tiempo_adicional, precio } = req.body;
+  try {
+    const result = await pool.query(
+      `INSERT INTO parada_frecuencia (frecuencia_id, ciudad_id, orden, tiempo_adicional, precio)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [frecuenciaId, ciudad_id, orden, tiempo_adicional, precio || 0]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al agregar parada' });
+  }
+};
