@@ -19,7 +19,7 @@ const verificarToken = (req, res, next) => {
 };
 
 // ─── Middleware: verificar roles permitidos ──────────────────────────────────
-// Uso: roleGuard(['admin', 'operador'])
+// Uso: roleGuard(['cooperativa', 'oficinista', 'cliente', 'personal_bus', 'admin'])
 const roleGuard = (rolesPermitidos) => {
   return (req, res, next) => {
    

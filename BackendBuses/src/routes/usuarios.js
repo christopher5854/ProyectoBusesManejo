@@ -12,10 +12,10 @@ const { verificarToken, roleGuard } = require('../middlewares/roleGuard');
 
 // --- RUTAS ---
 // Primero verificamos el TOKEN, luego el ROL
-router.get('/',      verificarToken, roleGuard(['admin', 'operador']), getUsuarios);
-router.get('/:id',   verificarToken, roleGuard(['admin', 'operador']), getUsuarioById);
-router.post('/',     verificarToken, roleGuard(['admin']),             createUsuario);
-router.put('/:id',   verificarToken, roleGuard(['admin']),             updateUsuario);
-router.delete('/:id', verificarToken, roleGuard(['admin']),             deleteUsuario);
+router.get('/',       verificarToken, roleGuard(['admin', 'cooperativa', 'oficinista']), getUsuarios);
+router.get('/:id',    verificarToken, roleGuard(['admin', 'cooperativa', 'oficinista']), getUsuarioById);
+router.post('/',      verificarToken, roleGuard(['admin', 'cooperativa']),               createUsuario);
+router.put('/:id',    verificarToken, roleGuard(['admin', 'cooperativa']),               updateUsuario);
+router.delete('/:id', verificarToken, roleGuard(['admin', 'cooperativa']),               deleteUsuario);
 
 module.exports = router;

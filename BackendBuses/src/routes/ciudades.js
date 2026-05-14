@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const { pool } = require('../config/db');
+const { verificarToken, roleGuard } = require('../middlewares/roleGuard');
 
 // GET todas las ciudades
 router.get('/', async (req, res) => {
@@ -29,7 +30,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST nueva ciudad
-router.post('/', async (req, res) => {
+router.post('/', verificarToken, roleGuard(['admin', 'cooperativa']), async (req, res) => {
   const { nombre, provincia } = req.body;
   try {
     const result = await pool.query(
