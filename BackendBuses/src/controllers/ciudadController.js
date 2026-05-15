@@ -40,3 +40,21 @@ const crearCiudad = async (req, res) => {
     res.status(500).json({ error: 'Error al crear ciudad' });
   }
 };
+
+// Actualizar una ciudad
+const actualizarCiudad = async (req, res) => {
+  const { id } = req.params;
+  const { nombre, provincia } = req.body;
+  try {
+    const result = await pool.query(
+      'UPDATE ciudad SET nombre = COALESCE($1, nombre), provincia = COALESCE($2, provincia) WHERE id = $3 RETURNING *',
+      [nombre, provincia, id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Ciudad no encontrada' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    if (err.code === '23505') return res.status(400).json({ error: 'El nombre ya existe' });
+    console.error(err);
+    res.status(500).json({ error: 'Error al actualizar ciudad' });
+  }
+};
