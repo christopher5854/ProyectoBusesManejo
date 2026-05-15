@@ -23,3 +23,20 @@ const obtenerCiudad = async (req, res) => {
     res.status(500).json({ error: 'Error al obtener ciudad' });
   }
 };
+
+// Crear una nueva ciudad
+const crearCiudad = async (req, res) => {
+  const { nombre, provincia } = req.body;
+  if (!nombre) return res.status(400).json({ error: 'El nombre es obligatorio' });
+  try {
+    const result = await pool.query(
+      'INSERT INTO ciudad (nombre, provincia) VALUES ($1, $2) RETURNING *',
+      [nombre, provincia || null]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    if (err.code === '23505') return res.status(400).json({ error: 'La ciudad ya existe' });
+    console.error(err);
+    res.status(500).json({ error: 'Error al crear ciudad' });
+  }
+};
