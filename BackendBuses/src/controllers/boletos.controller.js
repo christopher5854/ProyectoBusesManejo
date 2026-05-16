@@ -181,16 +181,6 @@ const generarPDF = async (req, res) => {
   }
 };
 
-module.exports = {
-  getBoletos,
-  getBoletoById,
-  createBoleto,
-  registrarPago,
-  subirComprobante,
-  validarPago,
-  generarQR,
-  generarPDF
-};
 
 const multer = require('multer');
 const path = require('path');
@@ -248,4 +238,15 @@ const subirComprobante = async (req, res) => {
       res.status(500).json({ message: error.message });
     }
   });
+};
+
+module.exports = {
+  getBoletos,
+  getBoletoById,
+  createBoleto,
+  registrarPago,
+  subirComprobante,
+  validarPago,
+  generarQR,
+  generarPDF
 };
