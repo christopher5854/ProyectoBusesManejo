@@ -24,18 +24,19 @@ const createBoleto = async (req, res) => {
     const {
       ruta_id,
       asiento_id,
-      pasajero_cedula,
-      pasajero_nombres,
-      pasajero_apellidos,
-      pasajero_telefono,
+      cliente_id,
       tipo_descuento_id,
+      ciudad_abordaje_id,
+      ciudad_destino_id,
+      metodo_pago_id,
+      precio_base,
+      descuento_aplicado,
       precio_final
     } = req.body;
 
-    const usuario_id = req.user.id; // del token
-
     // Validar campos requeridos
-    if (!ruta_id || !asiento_id || !pasajero_cedula || !pasajero_nombres) {
+    if (!ruta_id || !asiento_id || !cliente_id || !ciudad_abordaje_id || !ciudad_destino_id || !metodo_pago_id || !precio_base) {
+      await client.query('ROLLBACK');
       return res.status(400).json({ message: 'Faltan campos requeridos' });
     }
 
@@ -59,26 +60,21 @@ const createBoleto = async (req, res) => {
       return res.status(409).json({ message: `El asiento ${asiento.numero_asiento} ya no está disponible` });
     }
 
-    // 2. Generar código único del boleto (timestamp + random)
-    const codigo_boleto = `BOL-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-
-    // 3. Insertar el boleto
+    // 2. Insertar el boleto
     const boletoResult = await client.query(
       `INSERT INTO boleto 
-       (codigo_boleto, ruta_id, asiento_id, usuario_id, pasajero_cedula, 
-        pasajero_nombres, pasajero_apellidos, pasajero_telefono, 
-        tipo_descuento_id, precio_final, estado_pago, estado_uso)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pendiente', 'pendiente')
+       (ruta_id, asiento_id, cliente_id, tipo_descuento_id, ciudad_abordaje_id, 
+        ciudad_destino_id, metodo_pago_id, precio_base, descuento_aplicado, precio_final, estado_pago)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pendiente')
        RETURNING *`,
-      [codigo_boleto, ruta_id, asiento_id, usuario_id, pasajero_cedula,
-       pasajero_nombres, pasajero_apellidos || null, pasajero_telefono || null,
-       tipo_descuento_id || null, precio_final || 0]
+      [ruta_id, asiento_id, cliente_id, tipo_descuento_id || null, ciudad_abordaje_id,
+       ciudad_destino_id, metodo_pago_id, precio_base, descuento_aplicado || 0, precio_final || precio_base]
     );
 
-    // 4. Marcar el asiento como reservado
+    // 3. Marcar el asiento como ocupado (no disponible)
     await client.query(
       'UPDATE asiento SET estado = $1 WHERE id = $2',
-      ['reservado', asiento_id]
+      ['ocupado', asiento_id]
     );
 
     // Confirmar transacción
