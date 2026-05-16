@@ -145,15 +145,6 @@ const registrarPago = async (req, res) => {
   }
 };
 
-// POST /api/boletos/:id/comprobante
-const subirComprobante = async (req, res) => {
-  try {
-    res.json({ message: 'Subir comprobante - por implementar' });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
 // PUT /api/boletos/:id/validar
 const validarPago = async (req, res) => {
   try {
