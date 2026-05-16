@@ -1,5 +1,8 @@
 const nodemailer = require('nodemailer');
 
+// NOTA: Este servicio será integrado por Alexis en el módulo de boletos (BUS-06)
+
+
 // Configuración para MailHog (entorno de desarrollo)
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'localhost',
