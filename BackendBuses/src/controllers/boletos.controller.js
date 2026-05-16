@@ -148,10 +148,53 @@ const registrarPago = async (req, res) => {
 };
 
 // PUT /api/boletos/:id/validar
+// PUT /api/boletos/:id/validar (solo oficinista)
 const validarPago = async (req, res) => {
   try {
-    res.json({ message: 'Validar pago - por implementar' });
+    const { id } = req.params;
+    const oficinista_id = req.user.id; // del token
+
+    // Verificar que el boleto existe y está pagado
+    const boletoResult = await pool.query(
+      'SELECT id, estado_pago, estado_boleto FROM boleto WHERE id = $1',
+      [id]
+    );
+
+    if (boletoResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Boleto no encontrado' });
+    }
+
+    const boleto = boletoResult.rows[0];
+
+    if (boleto.estado_pago !== 'pagado') {
+      return res.status(409).json({ 
+        message: `No se puede validar. El pago está ${boleto.estado_pago}. Debe estar "pagado"` 
+      });
+    }
+
+    if (boleto.estado_boleto === 'usado') {
+      return res.status(409).json({ message: 'Este boleto ya fue usado' });
+    }
+
+    // Actualizar el boleto: validado por oficinista
+    const result = await pool.query(
+      `UPDATE boleto 
+       SET estado_pago = 'validado',
+           estado_boleto = 'emitido',
+           oficinista_id = $1,
+           fecha_validacion = NOW()
+       WHERE id = $2 
+       RETURNING *`,
+      [oficinista_id, id]
+    );
+
+    res.json({
+      message: 'Pago validado exitosamente por el oficinista',
+      boleto: result.rows[0]
+    });
+
   } catch (error) {
+    console.error('Error al validar pago:', error);
     res.status(500).json({ message: error.message });
   }
 };
