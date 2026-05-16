@@ -2,10 +2,6 @@
   "name": "backendbuses",
   "version": "1.0.0",
   "main": "index.js",
-  "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
-  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -25,8 +21,10 @@
     "db-migrate-pg": "^1.5.2"
   },
   "scripts": {
-    "migrate:up": "db-migrate up",
-    "migrate:down": "db-migrate down",
-    "migrate:create": "db-migrate create"
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "migrate:up": "node -r dotenv/config ./node_modules/db-migrate/bin/db-migrate up",
+    "migrate:down": "node -r dotenv/config ./node_modules/db-migrate/bin/db-migrate down",
+    "migrate:create": "node -r dotenv/config ./node_modules/db-migrate/bin/db-migrate create"
   }
 }
