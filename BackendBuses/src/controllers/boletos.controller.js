@@ -1,4 +1,6 @@
 const { pool } = require('../config/db');
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
 
 // GET /api/boletos
 const getBoletos = async (req, res) => {
@@ -215,10 +217,118 @@ const generarQR = async (req, res) => {
 };
 
 // GET /api/boletos/:id/pdf
+// GET /api/boletos/:id/pdf
 const generarPDF = async (req, res) => {
   try {
-    res.json({ message: 'Generar PDF - por implementar' });
+    const { id } = req.params;
+
+    // Obtener datos del boleto con toda la información necesaria
+    const boletoResult = await pool.query(
+      `SELECT b.id, b.codigo_boleto, b.precio_base, b.descuento_aplicado, b.precio_final, 
+              b.estado_pago, b.referencia_bancaria, b.fecha_pago, b.fecha_emision,
+              u.nombres as cliente_nombre, u.apellidos as cliente_apellidos, u.cedula as cliente_cedula,
+              ci.nombre as ciudad_origen, cd.nombre as ciudad_destino,
+              a.numero_asiento, a.piso,
+              tp.nombre as tipo_asiento,
+              r.fecha_ruta,
+              fr.hora_salida
+       FROM boleto b
+       JOIN usuario u ON b.cliente_id = u.id
+       JOIN ciudad ci ON b.ciudad_abordaje_id = ci.id
+       JOIN ciudad cd ON b.ciudad_destino_id = cd.id
+       JOIN asiento a ON b.asiento_id = a.id
+       JOIN tipo_asiento tp ON a.tipo_asiento_id = tp.id
+       JOIN ruta r ON b.ruta_id = r.id
+       JOIN frecuencia fr ON r.frecuencia_id = fr.id
+       WHERE b.id = $1`,
+      [id]
+    );
+
+    if (boletoResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Boleto no encontrado' });
+    }
+
+    const boleto = boletoResult.rows[0];
+
+    // Configurar respuesta como PDF
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=boleto_${boleto.codigo_boleto}.pdf`);
+
+    // Crear documento PDF
+    const doc = new PDFDocument({ margin: 50 });
+    doc.pipe(res);
+
+    // Título
+    doc.fontSize(20).text('TRANSISYS - BOLETO DE PASAJE', { align: 'center' });
+    doc.moveDown();
+
+    // Línea separadora
+    doc.strokeColor('#cccccc').lineWidth(1).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+    doc.moveDown();
+
+    // Información del boleto
+    doc.fontSize(14).text(`Código: ${boleto.codigo_boleto}`, { align: 'center' });
+    doc.moveDown();
+
+    // Datos del pasajero
+    doc.fontSize(12).text('DATOS DEL PASAJERO', { underline: true });
+    doc.fontSize(10).text(`Nombre: ${boleto.cliente_nombre} ${boleto.cliente_apellidos || ''}`);
+    doc.text(`Cédula: ${boleto.cliente_cedula}`);
+    doc.moveDown();
+
+    // Datos del viaje
+    doc.fontSize(12).text('DATOS DEL VIAJE', { underline: true });
+    doc.fontSize(10).text(`Origen: ${boleto.ciudad_origen}`);
+    doc.text(`Destino: ${boleto.ciudad_destino}`);
+    doc.text(`Fecha: ${new Date(boleto.fecha_ruta).toLocaleDateString()}`);
+    doc.text(`Hora: ${boleto.hora_salida.substring(0, 5)}`);
+    doc.text(`Asiento: ${boleto.numero_asiento} (Piso ${boleto.piso})`);
+    doc.text(`Tipo: ${boleto.tipo_asiento}`);
+    doc.moveDown();
+
+    // Información del pago
+    doc.fontSize(12).text('INFORMACIÓN DEL PAGO', { underline: true });
+    doc.fontSize(10).text(`Precio Base: $${parseFloat(boleto.precio_base).toFixed(2)}`);
+    doc.text(`Descuento: $${parseFloat(boleto.descuento_aplicado).toFixed(2)}`);
+    doc.text(`Total Pagado: $${parseFloat(boleto.precio_final).toFixed(2)}`);
+    doc.text(`Estado: ${boleto.estado_pago.toUpperCase()}`);
+    if (boleto.referencia_bancaria) {
+      doc.text(`Referencia: ${boleto.referencia_bancaria}`);
+    }
+    if (boleto.fecha_pago) {
+      doc.text(`Fecha Pago: ${new Date(boleto.fecha_pago).toLocaleString()}`);
+    }
+    doc.moveDown();
+
+    // Generar QR y agregarlo al PDF
+    const qrData = {
+      codigo: boleto.codigo_boleto,
+      boleto_id: boleto.id,
+      pasajero: boleto.cliente_nombre,
+      cedula: boleto.cliente_cedula,
+      asiento: boleto.numero_asiento,
+      origen: boleto.ciudad_origen,
+      destino: boleto.ciudad_destino
+    };
+
+    const QRCode = require('qrcode');
+    const qrImage = await QRCode.toBuffer(JSON.stringify(qrData));
+
+    doc.image(qrImage, {
+      fit: [100, 100],
+      align: 'center',
+      valign: 'center'
+    });
+
+    doc.moveDown();
+    doc.fontSize(8).text('Presentar este documento al abordar el bus.', { align: 'center' });
+    doc.text(`Emitido: ${new Date(boleto.fecha_emision).toLocaleString()}`, { align: 'center' });
+
+    // Finalizar PDF
+    doc.end();
+
   } catch (error) {
+    console.error('Error al generar PDF:', error);
     res.status(500).json({ message: error.message });
   }
 };
