@@ -99,7 +99,6 @@ const createBoleto = async (req, res) => {
 };
 
 // PUT /api/boletos/:id/pago
-// PUT /api/boletos/:id/pago
 const registrarPago = async (req, res) => {
   try {
     const { id } = req.params;
@@ -124,19 +123,19 @@ const registrarPago = async (req, res) => {
       return res.status(409).json({ message: `El pago ya está ${boleto.estado_pago}` });
     }
 
-    // Actualizar el boleto con la referencia bancaria
+    // Actualizar el boleto con la referencia bancaria y cambiar estado a 'pagado'
     const result = await pool.query(
       `UPDATE boleto 
        SET referencia_bancaria = $1, 
            fecha_pago = NOW(),
-           estado_pago = 'en_validacion'
+           estado_pago = 'pagado'
        WHERE id = $2 
        RETURNING *`,
       [referencia_bancaria, id]
     );
 
     res.json({
-      message: 'Pago registrado exitosamente. Esperando validación del oficinista.',
+      message: 'Pago registrado exitosamente',
       boleto: result.rows[0]
     });
 
