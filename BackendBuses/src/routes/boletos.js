@@ -18,7 +18,7 @@ router.post('/', verificarToken, roleGuard(['superadmin', 'admin', 'cliente', 'o
 router.put('/:id/pago', verificarToken, roleGuard(['superadmin', 'admin', 'cliente']), registrarPago);
 router.post('/:id/comprobante', verificarToken, roleGuard(['superadmin', 'admin', 'cliente']), subirComprobante);
 router.put('/:id/validar', verificarToken, roleGuard(['oficinista', 'admin']), validarPago);
-router.post('/:id/qr', verificarToken, generarQR);
+router.post('/:id/qr', verificarToken, roleGuard(['superadmin', 'admin', 'cliente', 'oficinista']), generarQR);
 router.get('/:id/pdf', verificarToken, generarPDF);
 
 module.exports = router;
