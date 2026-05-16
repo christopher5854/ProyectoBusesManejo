@@ -99,10 +99,49 @@ const createBoleto = async (req, res) => {
 };
 
 // PUT /api/boletos/:id/pago
+// PUT /api/boletos/:id/pago
 const registrarPago = async (req, res) => {
   try {
-    res.json({ message: 'Registrar pago - por implementar' });
+    const { id } = req.params;
+    const { referencia_bancaria } = req.body;
+
+    if (!referencia_bancaria) {
+      return res.status(400).json({ message: 'La referencia bancaria es requerida' });
+    }
+
+    // Verificar que el boleto existe y está pendiente
+    const boletoResult = await pool.query(
+      'SELECT id, estado_pago FROM boleto WHERE id = $1',
+      [id]
+    );
+
+    if (boletoResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Boleto no encontrado' });
+    }
+
+    const boleto = boletoResult.rows[0];
+    if (boleto.estado_pago !== 'pendiente') {
+      return res.status(409).json({ message: `El pago ya está ${boleto.estado_pago}` });
+    }
+
+    // Actualizar el boleto con la referencia bancaria
+    const result = await pool.query(
+      `UPDATE boleto 
+       SET referencia_bancaria = $1, 
+           fecha_pago = NOW(),
+           estado_pago = 'en_validacion'
+       WHERE id = $2 
+       RETURNING *`,
+      [referencia_bancaria, id]
+    );
+
+    res.json({
+      message: 'Pago registrado exitosamente. Esperando validación del oficinista.',
+      boleto: result.rows[0]
+    });
+
   } catch (error) {
+    console.error('Error al registrar pago:', error);
     res.status(500).json({ message: error.message });
   }
 };
