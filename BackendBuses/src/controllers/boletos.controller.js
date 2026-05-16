@@ -155,10 +155,66 @@ const validarPago = async (req, res) => {
 };
 
 // POST /api/boletos/:id/qr
+const QRCode = require('qrcode');
+
+// POST /api/boletos/:id/qr
 const generarQR = async (req, res) => {
   try {
-    res.json({ message: 'Generar QR - por implementar' });
+    const { id } = req.params;
+
+    // Obtener datos del boleto
+    const boletoResult = await pool.query(
+      `SELECT b.id, b.codigo_boleto, b.asiento_id, b.precio_final, 
+              b.ciudad_abordaje_id, b.ciudad_destino_id, b.estado_pago,
+              u.nombres as cliente_nombre, u.cedula as cliente_cedula,
+              ci.nombre as ciudad_origen, cd.nombre as ciudad_destino,
+              a.numero_asiento
+       FROM boleto b
+       JOIN usuario u ON b.cliente_id = u.id
+       JOIN ciudad ci ON b.ciudad_abordaje_id = ci.id
+       JOIN ciudad cd ON b.ciudad_destino_id = cd.id
+       JOIN asiento a ON b.asiento_id = a.id
+       WHERE b.id = $1`,
+      [id]
+    );
+
+    if (boletoResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Boleto no encontrado' });
+    }
+
+    const boleto = boletoResult.rows[0];
+
+    // Crear objeto con la información para el QR
+    const qrData = {
+      codigo: boleto.codigo_boleto,
+      boleto_id: boleto.id,
+      pasajero: boleto.cliente_nombre,
+      cedula: boleto.cliente_cedula,
+      asiento: boleto.numero_asiento,
+      origen: boleto.ciudad_origen,
+      destino: boleto.ciudad_destino,
+      fecha: new Date().toISOString().split('T')[0]
+    };
+
+    // Generar QR como string JSON
+    const qrString = JSON.stringify(qrData);
+    const qrImage = await QRCode.toDataURL(qrString);
+
+    // Guardar el QR en la base de datos (opcional)
+    await pool.query(
+      'UPDATE boleto SET qr_url = $1 WHERE id = $2',
+      [qrImage, id]
+    );
+
+    res.json({
+      message: 'QR generado exitosamente',
+      qr: qrImage,
+      boleto_id: boleto.id,
+      codigo_boleto: boleto.codigo_boleto
+    });
+
   } catch (error) {
+    console.error('Error al generar QR:', error);
     res.status(500).json({ message: error.message });
   }
 };
