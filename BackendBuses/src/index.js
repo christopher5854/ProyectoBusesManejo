@@ -18,6 +18,10 @@ app.use('/api/auth',       require('./routes/auth.routes'));
 app.use('/api', require('./routes/validaciones.routes'));
 app.use('/api/tipo-descuento', require('./routes/descuento.routes'));
 
+//Importación y uso de rutas de frecuencias
+const frecuenciasRoutes = require('./routes/frecuencias');
+app.use('/api/frecuencias', frecuenciasRoutes);
+
 app.get('/', (req, res) => {
   res.json({ mensaje: 'API TransiSys funcionando' });
 });
