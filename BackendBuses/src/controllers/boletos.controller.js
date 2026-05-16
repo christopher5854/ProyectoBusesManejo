@@ -178,13 +178,11 @@ const registrarPago = async (req, res) => {
 };
 
 // PUT /api/boletos/:id/validar
-// PUT /api/boletos/:id/validar (solo oficinista)
 const validarPago = async (req, res) => {
   try {
     const { id } = req.params;
-    const oficinista_id = req.user.id; // del token
+    const oficinista_id = req.user.id;
 
-    // Verificar que el boleto existe y está pagado
     const boletoResult = await pool.query(
       'SELECT id, estado_pago, estado_boleto FROM boleto WHERE id = $1',
       [id]
@@ -198,20 +196,13 @@ const validarPago = async (req, res) => {
 
     if (boleto.estado_pago !== 'pagado') {
       return res.status(409).json({ 
-        message: `No se puede validar. El pago está ${boleto.estado_pago}. Debe estar "pagado"` 
+        message: `No se puede validar. El pago está ${boleto.estado_pago}` 
       });
     }
 
-    if (boleto.estado_boleto === 'usado') {
-      return res.status(409).json({ message: 'Este boleto ya fue usado' });
-    }
-
-    // Actualizar el boleto: validado por oficinista
     const result = await pool.query(
       `UPDATE boleto 
-       SET estado_pago = 'validado',
-           estado_boleto = 'emitido',
-           oficinista_id = $1,
+       SET oficinista_id = $1,
            fecha_validacion = NOW()
        WHERE id = $2 
        RETURNING *`,
