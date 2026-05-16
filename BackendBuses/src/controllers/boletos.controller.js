@@ -191,3 +191,61 @@ module.exports = {
   generarQR,
   generarPDF
 };
+
+const multer = require('multer');
+const path = require('path');
+
+// Configurar Multer
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, `comprobante-${req.params.id}-${uniqueSuffix}${path.extname(file.originalname)}`);
+  }
+});
+
+const upload = multer({ storage });
+
+// POST /api/boletos/:id/comprobante
+const subirComprobante = async (req, res) => {
+  const uploadMiddleware = upload.single('comprobante');
+  
+  uploadMiddleware(req, res, async (err) => {
+    if (err) {
+      return res.status(400).json({ message: err.message });
+    }
+    
+    if (!req.file) {
+      return res.status(400).json({ message: 'No se subió ningún archivo' });
+    }
+
+    try {
+      const { id } = req.params;
+      const comprobante_url = `/uploads/${req.file.filename}`;
+
+      const result = await pool.query(
+        `UPDATE boleto 
+         SET comprobante_url = $1
+         WHERE id = $2 
+         RETURNING *`,
+        [comprobante_url, id]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ message: 'Boleto no encontrado' });
+      }
+
+      res.json({
+        message: 'Comprobante subido exitosamente',
+        comprobante_url,
+        boleto: result.rows[0]
+      });
+
+    } catch (error) {
+      console.error('Error al subir comprobante:', error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+};
