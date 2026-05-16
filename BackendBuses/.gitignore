@@ -1,3 +1,5 @@
 node_modules/
 .env
+database.jsonnode_modules/
+uploads/
 database.json
