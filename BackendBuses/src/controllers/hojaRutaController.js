@@ -32,7 +32,7 @@ async function generarRutasDiarias(hojaId, fechaInicio, fechaFin) {
     const fecha = d.toISOString().slice(0, 10);
     await pool.query(
       `INSERT INTO ruta (hoja_ruta_id, frecuencia_id, fecha_ruta, estado)
-       SELECT $1, frecuencia_id, $2, 'activo'
+       SELECT $1, frecuencia_id, $2, 'programada'
        FROM hoja_ruta WHERE id = $1`,
       [hojaId, fecha]
     );
