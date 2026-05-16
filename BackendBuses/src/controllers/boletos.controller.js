@@ -12,10 +12,40 @@ const getBoletos = async (req, res) => {
 };
 
 // GET /api/boletos/:id
+// GET /api/boletos/:id
 const getBoletoById = async (req, res) => {
   try {
-    res.json({ message: `Boleto ${req.params.id} - por implementar` });
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `SELECT b.id, b.codigo_boleto, b.precio_base, b.descuento_aplicado, b.precio_final, 
+              b.estado_pago, b.estado_boleto, b.referencia_bancaria, b.comprobante_url, 
+              b.fecha_pago, b.fecha_validacion, b.fecha_emision,
+              u.nombres as cliente_nombre, u.apellidos as cliente_apellidos, u.cedula as cliente_cedula,
+              ci.nombre as ciudad_origen, cd.nombre as ciudad_destino,
+              a.numero_asiento, a.piso,
+              tp.nombre as tipo_asiento,
+              r.fecha_ruta,
+              fr.hora_salida
+       FROM boleto b
+       JOIN usuario u ON b.cliente_id = u.id
+       JOIN ciudad ci ON b.ciudad_abordaje_id = ci.id
+       JOIN ciudad cd ON b.ciudad_destino_id = cd.id
+       JOIN asiento a ON b.asiento_id = a.id
+       JOIN tipo_asiento tp ON a.tipo_asiento_id = tp.id
+       JOIN ruta r ON b.ruta_id = r.id
+       JOIN frecuencia fr ON r.frecuencia_id = fr.id
+       WHERE b.id = $1`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Boleto no encontrado' });
+    }
+
+    res.json(result.rows[0]);
   } catch (error) {
+    console.error('Error al obtener boleto:', error);
     res.status(500).json({ message: error.message });
   }
 };
