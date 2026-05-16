@@ -47,17 +47,17 @@ const createBoleto = async (req, res) => {
 
     // 1. Bloquear el asiento para evitar doble venta (SELECT FOR UPDATE)
     const asientoResult = await client.query(
-      'SELECT id, estado, numero_asiento FROM asiento WHERE id = $1 FOR UPDATE',
+      'SELECT id, disponible, numero_asiento FROM asiento WHERE id = $1 AND activo = true FOR UPDATE',
       [asiento_id]
     );
 
     if (asientoResult.rows.length === 0) {
       await client.query('ROLLBACK');
-      return res.status(404).json({ message: 'Asiento no encontrado' });
+      return res.status(404).json({ message: 'Asiento no encontrado o inactivo' });
     }
 
     const asiento = asientoResult.rows[0];
-    if (asiento.estado !== 'disponible') {
+    if (!asiento.disponible) {
       await client.query('ROLLBACK');
       return res.status(409).json({ message: `El asiento ${asiento.numero_asiento} ya no está disponible` });
     }
@@ -73,10 +73,10 @@ const createBoleto = async (req, res) => {
        ciudad_destino_id, metodo_pago_id, precio_base, descuento_aplicado || 0, precio_final || precio_base]
     );
 
-    // 3. Marcar el asiento como ocupado (no disponible)
+    // 3. Marcar el asiento como NO disponible
     await client.query(
-      'UPDATE asiento SET estado = $1 WHERE id = $2',
-      ['ocupado', asiento_id]
+      'UPDATE asiento SET disponible = false WHERE id = $1',
+      [asiento_id]
     );
 
     // Confirmar transacción
