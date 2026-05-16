@@ -1,3 +1,5 @@
+const { pool } = require('../config/db');
+
 // GET /api/boletos
 const getBoletos = async (req, res) => {
   try {
