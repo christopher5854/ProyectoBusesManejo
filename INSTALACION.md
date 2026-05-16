@@ -25,7 +25,7 @@ cd ProyectoBusesManejo
 ### 2. Backend - Instalar y Configurar
 ```bash
 cd BackendBuses
-npm install
+cd BackendBuses
 ```
 
 Crear archivo `.env`:

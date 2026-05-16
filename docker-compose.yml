@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  # Base de datos asignada a Sonia
+  postgres:
+    image: postgres:17
+    container_name: buses_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: cooperativa_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Tu servidor Backend
+  backend:
+    build: ./BackendBuses
+    container_name: buses_backend
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: cooperativa_db
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      JWT_SECRET: clave_secreta_2026
+      PORT: 3000
+    ports:
+      - "3000:3000"
+
+  # App de React para Juan y Abel
+  frontend:
+    build: ./frontendBuses
+    container_name: buses_frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+
+  # Pruebas de Email (Tu tarea)
+  mailhog:
+    image: mailhog/mailhog
+    container_name: buses_mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+  # Administrador de BD
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: buses_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
