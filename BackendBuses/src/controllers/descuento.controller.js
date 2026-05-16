@@ -34,8 +34,8 @@ const createDescuento = async (req, res) => {
     }
     
     const result = await pool.query(
-      'INSERT INTO tipo_descuento (nombre, descripcion, porcentaje, activo) VALUES ($1, $2, $3, $4) RETURNING *',
-      [nombre, descripcion || null, porcentaje, activo !== undefined ? activo : true]
+    'INSERT INTO tipo_descuento (nombre, descripcion, porcentaje) VALUES ($1, $2, $3) RETURNING *',
+    [nombre, descripcion || null, porcentaje]
     );
     res.status(201).json(result.rows[0]);
   } catch (error) {
@@ -50,8 +50,8 @@ const updateDescuento = async (req, res) => {
     const { nombre, descripcion, porcentaje, activo } = req.body;
     
     const result = await pool.query(
-      'UPDATE tipo_descuento SET nombre = COALESCE($1, nombre), descripcion = COALESCE($2, descripcion), porcentaje = COALESCE($3, porcentaje), activo = COALESCE($4, activo) WHERE id = $5 RETURNING *',
-      [nombre, descripcion, porcentaje, activo, id]
+    'UPDATE tipo_descuento SET nombre = COALESCE($1, nombre), descripcion = COALESCE($2, descripcion), porcentaje = COALESCE($3, porcentaje) WHERE id = $4 RETURNING *',
+    [nombre, descripcion, porcentaje, id]
     );
     
     if (result.rows.length === 0) {
