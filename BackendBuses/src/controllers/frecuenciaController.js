@@ -87,7 +87,7 @@ const buscarFrecuencias = async (req, res) => {
              c1.nombre as origen, c2.nombre as destino,
              co.nombre as cooperativa, co.id as cooperativa_id,
              b.placa, b.capacidad_total,
-             (SELECT COUNT(*) FROM ruta r WHERE r.frecuencia_id = f.id AND r.fecha_ruta = $3 AND r.estado = 'activo') as tiene_ruta
+             (SELECT COUNT(*) FROM ruta r WHERE r.frecuencia_id = f.id AND r.fecha_ruta = $3 AND r.estado = 'programada') as tiene_ruta
       FROM frecuencia f
       JOIN ciudad c1 ON f.ciudad_origen_id = c1.id
       JOIN ciudad c2 ON f.ciudad_destino_id = c2.id
