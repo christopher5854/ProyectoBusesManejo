@@ -12,7 +12,7 @@ const {
   generarPDF
 } = require('../controllers/boletos.controller');
 
-router.get('/', verificarToken, roleGuard(['admin', 'oficinista', 'cliente']), getBoletos);
+router.get('/', verificarToken, roleGuard(['superadmin', 'admin', 'oficinista', 'cliente']), getBoletos);
 router.get('/:id', verificarToken, getBoletoById);
 router.post('/', verificarToken, roleGuard(['cliente', 'oficinista']), createBoleto);
 router.put('/:id/pago', verificarToken, roleGuard(['cliente']), registrarPago);
