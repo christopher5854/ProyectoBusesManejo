@@ -4,7 +4,11 @@ const { pool } = require('../config/db');
 const listarRutas = async (req, res) => {
   const { fecha, cooperativa_id } = req.query;
   let query = `
-    SELECT r.*, b.placa, f.origen, f.destino, hr.cooperativa_id
+    SELECT r.id, r.fecha_ruta, r.estado, r.observacion,
+           b.placa, b.capacidad_total,
+           f.origen, f.destino,
+           hr.cooperativa_id,
+           COUNT(bo.id) as asientos_ocupados
     FROM ruta r
     JOIN hoja_ruta hr ON r.hoja_ruta_id = hr.id
     JOIN bus b ON hr.bus_id = b.id
@@ -14,6 +18,7 @@ const listarRutas = async (req, res) => {
       JOIN ciudad c1 ON f.ciudad_origen_id = c1.id
       JOIN ciudad c2 ON f.ciudad_destino_id = c2.id
     ) f ON r.frecuencia_id = f.id
+    LEFT JOIN boleto bo ON bo.ruta_id = r.id AND bo.estado_boleto != 'cancelado'
     WHERE 1=1
   `;
   const values = [];
@@ -25,15 +30,14 @@ const listarRutas = async (req, res) => {
     values.push(cooperativa_id);
     query += ` AND hr.cooperativa_id = $${values.length}`;
   }
+  query += ` GROUP BY r.id, b.placa, b.capacidad_total, f.origen, f.destino, hr.cooperativa_id`;
   try {
     const result = await pool.query(query, values);
-    // Agregar disponibilidad de asientos
-    for (let r of result.rows) {
-      const capacidad = await pool.query(`SELECT capacidad_total FROM bus WHERE id = (SELECT bus_id FROM hoja_ruta WHERE id = $1)`, [r.hoja_ruta_id]);
-      const ocupados = await pool.query(`SELECT COUNT(*) FROM boleto WHERE ruta_id = $1 AND estado_boleto != 'cancelado'`, [r.id]);
-      r.asientos_disponibles = capacidad.rows[0].capacidad_total - parseInt(ocupados.rows[0].count);
-    }
-    res.json(result.rows);
+    const rutas = result.rows.map(r => ({
+      ...r,
+      asientos_disponibles: r.capacidad_total - parseInt(r.asientos_ocupados)
+    }));
+    res.json(rutas);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Error al listar rutas' });
