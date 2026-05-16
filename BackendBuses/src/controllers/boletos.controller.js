@@ -38,9 +38,11 @@ const createBoleto = async (req, res) => {
 
     // Validar campos requeridos
     if (!ruta_id || !asiento_id || !cliente_id || !ciudad_abordaje_id || !ciudad_destino_id || !metodo_pago_id || !precio_base) {
-      await client.query('ROLLBACK');
       return res.status(400).json({ message: 'Faltan campos requeridos' });
     }
+
+    // Generar código único del boleto
+    const codigo_boleto = `BOL-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
 
     // Iniciar transacción
     await client.query('BEGIN');
@@ -62,14 +64,14 @@ const createBoleto = async (req, res) => {
       return res.status(409).json({ message: `El asiento ${asiento.numero_asiento} ya no está disponible` });
     }
 
-    // 2. Insertar el boleto
+    // 2. Insertar el boleto con codigo_boleto
     const boletoResult = await client.query(
       `INSERT INTO boleto 
-       (ruta_id, asiento_id, cliente_id, tipo_descuento_id, ciudad_abordaje_id, 
+       (codigo_boleto, ruta_id, asiento_id, cliente_id, tipo_descuento_id, ciudad_abordaje_id, 
         ciudad_destino_id, metodo_pago_id, precio_base, descuento_aplicado, precio_final, estado_pago)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pendiente')
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'pendiente')
        RETURNING *`,
-      [ruta_id, asiento_id, cliente_id, tipo_descuento_id || null, ciudad_abordaje_id,
+      [codigo_boleto, ruta_id, asiento_id, cliente_id, tipo_descuento_id || null, ciudad_abordaje_id,
        ciudad_destino_id, metodo_pago_id, precio_base, descuento_aplicado || 0, precio_final || precio_base]
     );
 
