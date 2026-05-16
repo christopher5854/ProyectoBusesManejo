@@ -63,12 +63,12 @@ const detalleRuta = async (req, res) => {
   }
 };
 
-// Actualizar estado de una ruta (activo, cancelado, en_curso)
+// Actualizar estado de una ruta (programada, en_curso, completada, cancelada)
 const actualizarEstadoRuta = async (req, res) => {
   const { id } = req.params;
   const { estado } = req.body;
-  if (!['activo', 'cancelado', 'en_curso'].includes(estado)) {
-    return res.status(400).json({ error: 'Estado no válido' });
+  if (!['programada', 'en_curso', 'completada', 'cancelada'].includes(estado)) {
+    return res.status(400).json({ error: 'Estado no válido. Use: programada, en_curso, completada, cancelada' });
   }
   try {
     const result = await pool.query(
