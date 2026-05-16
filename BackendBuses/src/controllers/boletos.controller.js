@@ -200,12 +200,7 @@ const generarQR = async (req, res) => {
     const qrString = JSON.stringify(qrData);
     const qrImage = await QRCode.toDataURL(qrString);
 
-    // Guardar el QR en la base de datos (opcional)
-    await pool.query(
-      'UPDATE boleto SET qr_url = $1 WHERE id = $2',
-      [qrImage, id]
-    );
-
+    // No guardamos en la BD para evitar error de longitud
     res.json({
       message: 'QR generado exitosamente',
       qr: qrImage,
