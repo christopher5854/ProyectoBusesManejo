@@ -5,6 +5,7 @@ import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import SearchIcon from "@mui/icons-material/Search";
 import { UserContext } from "../../../Context/UserContext";
 import './Hero.css';
+import { useNavigate } from "react-router-dom";
 
 const Hero = () => {
   const { cooperativa } = useContext(UserContext);
@@ -12,19 +13,20 @@ const Hero = () => {
   const [rutasFrecuentes, setRutasFrecuentes] = useState([]);
   const [origen, setOrigen] = useState("");
   const [destino, setDestino] = useState("");
+  const navigate = useNavigate();
+  const [fecha, setFecha] = useState("");
+  const [pasajeros, setPasajeros] = useState(1);
+  const [tipoAsiento, setTipoAsiento] = useState("cualquiera");
 
   useEffect(() => {
-    // Fetch Ciudades
     fetch("http://localhost:3000/api/ciudades")
       .then((res) => res.json())
       .then((data) => setCiudades(data))
       .catch((err) => console.error("Error fetching ciudades:", err));
 
-    // Fetch Rutas para frecuentes
     fetch("http://localhost:3000/api/rutas")
       .then((res) => res.json())
       .then((data) => {
-        // Extraer rutas únicas
         const unicas = new Set();
         data.forEach(r => unicas.add(`${r.ciudad_origen} → ${r.ciudad_destino}`));
         setRutasFrecuentes(Array.from(unicas).slice(0, 5));
@@ -35,7 +37,6 @@ const Hero = () => {
   return (
     <section className="hero">
 
-      {/* Tag superior */}
       <Box className="hero__tag">
         <span>📍</span>
         <Typography className="hero__tag-text">
@@ -43,23 +44,19 @@ const Hero = () => {
         </Typography>
       </Box>
 
-      {/* Título */}
       <Typography className="hero__title">
         Viaja con <span className="hero__title-accent">
           {cooperativa.nombre || "Flota Pelileo"}
         </span><br />desde donde estés
       </Typography>
 
-      {/* Subtítulo */}
       <Typography className="hero__subtitle">
         Compra tu pasaje en línea, elige tu asiento y recibe tu código QR al instante.
         Sin filas, sin complicaciones.
       </Typography>
 
-      {/* Buscador */}
       <Box className="hero__search">
 
-        {/* Fila origen / swap / destino */}
         <Box className="hero__search-grid">
           <Box className="hero__field">
             <Typography className="hero__field-label">Origen</Typography>
@@ -100,7 +97,6 @@ const Hero = () => {
           </Box>
         </Box>
 
-        {/* Fila fecha / pasajeros / tipo asiento / botón */}
         <Box className="hero__search-bottom">
           <Box className="hero__field">
             <Typography className="hero__field-label">Fecha</Typography>
@@ -109,13 +105,19 @@ const Hero = () => {
               size="small"
               fullWidth
               className="hero__input"
+              value={fecha}
+              onChange={(e) => setFecha(e.target.value)}
             />
           </Box>
 
           <Box className="hero__field">
             <Typography className="hero__field-label">Pasajeros</Typography>
             <FormControl size="small" fullWidth>
-              <Select defaultValue={1} className="hero__select">
+              <Select
+                value={pasajeros}
+                onChange={(e) => setPasajeros(e.target.value)}
+                className="hero__select"
+              >
                 <MenuItem value={1}>1 pasajero</MenuItem>
                 <MenuItem value={2}>2 pasajeros</MenuItem>
                 <MenuItem value={3}>3 pasajeros</MenuItem>
@@ -127,7 +129,11 @@ const Hero = () => {
           <Box className="hero__field">
             <Typography className="hero__field-label">Tipo de asiento</Typography>
             <FormControl size="small" fullWidth>
-              <Select defaultValue="cualquiera" className="hero__select">
+              <Select
+                value={tipoAsiento}
+                onChange={(e) => setTipoAsiento(e.target.value)}
+                className="hero__select"
+              >
                 <MenuItem value="cualquiera">Cualquiera</MenuItem>
                 <MenuItem value="normal">Normal</MenuItem>
                 <MenuItem value="vip">VIP</MenuItem>
@@ -139,13 +145,13 @@ const Hero = () => {
             variant="contained"
             className="hero__btn-search"
             startIcon={<SearchIcon />}
+            onClick={() => navigate(`/buscar/resultados?origen=${origen}&destino=${destino}&fecha=${fecha}&pasajeros=${pasajeros}&tipoAsiento=${tipoAsiento}`)}
           >
             Buscar
           </Button>
         </Box>
       </Box>
 
-      {/* Pills rutas frecuentes */}
       <Box className="hero__pills-wrap">
         <Typography className="hero__pills-label">Rutas frecuentes:</Typography>
         <Box className="hero__pills">
