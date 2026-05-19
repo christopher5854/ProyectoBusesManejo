@@ -1,6 +1,8 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
+import ResultadosPage from './pages/Resultados';  
+
 import './App.css';
 
 function App() {
@@ -11,6 +13,8 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/home" element={<Home />} />
+          <Route path="/buscar/resultados" element={<ResultadosPage />} /> 
+
 
           {/* Activar cuando existan las pantallas por rol */}
           {/* <Route path="/admin/dashboard" element={<AdminDashboard />} /> */}
