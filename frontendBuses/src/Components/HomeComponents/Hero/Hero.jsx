@@ -21,12 +21,13 @@ const Hero = () => {
   useEffect(() => {
     fetch("http://localhost:3000/api/ciudades")
       .then((res) => res.json())
-      .then((data) => setCiudades(data))
+      .then((data) => setCiudades(Array.isArray(data) ? data : []))
       .catch((err) => console.error("Error fetching ciudades:", err));
 
     fetch("http://localhost:3000/api/rutas")
       .then((res) => res.json())
       .then((data) => {
+        if (!Array.isArray(data)) return;
         const unicas = new Set();
         data.forEach(r => unicas.add(`${r.ciudad_origen} → ${r.ciudad_destino}`));
         setRutasFrecuentes(Array.from(unicas).slice(0, 5));
