@@ -3,6 +3,9 @@ import { Home } from './pages/Home';
 import { Login } from './pages/Login';
 import ResultadosPage from './pages/Resultados';  
 import AsientosPage from './pages/Asientos';  
+import PagoPage from './pages/Pagos';
+import HistorialPage from "./pages/Historial";
+
 
 import './App.css';
 
@@ -16,6 +19,8 @@ function App() {
           <Route path="/home" element={<Home />} />
           <Route path="/buscar/resultados" element={<ResultadosPage />} />
           <Route path="/asientos" element={<AsientosPage />} /> 
+          <Route path="/pago" element={<PagoPage />} /> 
+          <Route path="/historial" element={<HistorialPage />} />
 
 
           {/* Activar cuando existan las pantallas por rol */}

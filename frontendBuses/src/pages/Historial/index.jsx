@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Container, Typography, Box, Card, CardContent,
   CardActionArea, Chip, CircularProgress, Alert,
-  Modal, Divider
+  Modal, Divider, Button
 } from "@mui/material";
 import QRCode from "react-qr-code";
 
@@ -73,7 +73,6 @@ export default function HistorialPage() {
         ))}
       </Box>
 
-      {/* Modal detalle boleto */}
       <Modal open={!!seleccionado} onClose={() => setSeleccionado(null)}>
         <Box sx={{
           position: "absolute", top: "50%", left: "50%",
@@ -98,6 +97,14 @@ export default function HistorialPage() {
               </Box>
               <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
                 <QRCode value={seleccionado.codigo} size={160} />
+              </Box>
+              <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
+                <Button variant="contained" onClick={() => window.open(`${API}/boletos/${seleccionado.id}/pdf`, "_blank")}>
+                  Descargar PDF
+                </Button>
+                <Button variant="outlined" onClick={() => setSeleccionado(null)}>
+                  Cerrar
+                </Button>
               </Box>
             </>
           )}
