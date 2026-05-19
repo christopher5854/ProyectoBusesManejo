@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, Container, TextField, Typography, Paper, Grid } from "@mui/material";
+import { Box, Container, TextField, Typography, Paper, Grid, MenuItem } from "@mui/material";
 
 export default function BusquedaPage() {
   const [form, setForm] = useState({
@@ -8,8 +8,13 @@ export default function BusquedaPage() {
     fecha: "",
     pasajeros: 1,
   });
+  const [filtros, setFiltros] = useState({
+    tipoAsiento: "",
+    tipoViaje: "",
+  });
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleFiltro = (e) => setFiltros({ ...filtros, [e.target.name]: e.target.value });
 
   return (
     <Container maxWidth="sm" sx={{ mt: 8 }}>
@@ -36,6 +41,23 @@ export default function BusquedaPage() {
               <TextField fullWidth label="Pasajeros" name="pasajeros"
                 type="number" value={form.pasajeros} onChange={handleChange}
                 inputProps={{ min: 1, max: 10 }} />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField fullWidth select label="Tipo de asiento"
+                name="tipoAsiento" value={filtros.tipoAsiento} onChange={handleFiltro}>
+                <MenuItem value="">Todos</MenuItem>
+                <MenuItem value="Normal">Normal</MenuItem>
+                <MenuItem value="VIP">VIP</MenuItem>
+                <MenuItem value="Ejecutivo">Ejecutivo</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={6}>
+              <TextField fullWidth select label="Tipo de viaje"
+                name="tipoViaje" value={filtros.tipoViaje} onChange={handleFiltro}>
+                <MenuItem value="">Todos</MenuItem>
+                <MenuItem value="directo">Directo</MenuItem>
+                <MenuItem value="paradas">Con paradas</MenuItem>
+              </TextField>
             </Grid>
           </Grid>
         </Box>
