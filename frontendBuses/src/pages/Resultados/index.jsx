@@ -2,7 +2,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
   Box, Container, Typography, Card, CardContent,
-  CardMedia, Button, Chip, CircularProgress, Grid
+  CardMedia, Button, Chip, CircularProgress
 } from "@mui/material";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import AirlineSeatReclineNormalIcon from "@mui/icons-material/AirlineSeatReclineNormal";
@@ -75,7 +75,6 @@ export default function ResultadosPage() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    setLoading(true);
     fetch(`http://localhost:3000/api/frecuencias/buscar?origen=${origen}&destino=${destino}&fecha=${fecha}`)
       .then((res) => res.json())
       .then((data) => {
