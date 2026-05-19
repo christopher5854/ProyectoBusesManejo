@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { Box, Container, TextField, Typography, Paper, Grid, MenuItem } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { Box, Button, Container, TextField, Typography, Paper, Grid, MenuItem } from "@mui/material";
 
 export default function BusquedaPage() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     origen: "",
     destino: "",
@@ -16,13 +18,19 @@ export default function BusquedaPage() {
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
   const handleFiltro = (e) => setFiltros({ ...filtros, [e.target.name]: e.target.value });
 
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const params = new URLSearchParams({ ...form, ...filtros });
+    navigate(`/buscar/resultados?${params.toString()}`);
+  };
+
   return (
     <Container maxWidth="sm" sx={{ mt: 8 }}>
       <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
         <Typography variant="h5" fontWeight="bold" color="primary" mb={3}>
           Buscar Rutas
         </Typography>
-        <Box component="form">
+        <Box component="form" onSubmit={handleSearch}>
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <TextField fullWidth label="Origen" name="origen"
@@ -58,6 +66,11 @@ export default function BusquedaPage() {
                 <MenuItem value="directo">Directo</MenuItem>
                 <MenuItem value="paradas">Con paradas</MenuItem>
               </TextField>
+            </Grid>
+            <Grid item xs={12}>
+              <Button fullWidth type="submit" variant="contained" size="large">
+                Buscar rutas
+              </Button>
             </Grid>
           </Grid>
         </Box>
