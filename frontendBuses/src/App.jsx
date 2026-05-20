@@ -11,6 +11,7 @@ import AsientosPage from './pages/Asientos';
 import PagoPage from './pages/Pagos';
 import HistorialPage from "./pages/Historial";
 
+
 import './App.css';
 
 function App() {
@@ -28,6 +29,11 @@ function App() {
           <Route path="/login" element={<Login />} />
 
           <Route path="/home" element={<Home />} />
+          <Route path="/buscar/resultados" element={<ResultadosPage />} />
+          <Route path="/asientos" element={<AsientosPage />} /> 
+          <Route path="/pago" element={<PagoPage />} /> 
+          <Route path="/historial" element={<HistorialPage />} />
+
 
           <Route path="/admin/*" element={<AdminRoute />} />
 
@@ -42,7 +48,7 @@ function App() {
           <Route path="/pago" element={<PagoPage />} /> 
 
           <Route path="/historial" element={<HistorialPage />} />
-          
+
           <Route path="*" element={<Navigate to="/login" replace />} />
 
         </Routes>
