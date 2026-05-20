@@ -1,16 +1,27 @@
-import MainLayout from "../../layouts/MainLayout";
+import { useState } from 'react';
+import Oficinista from '../../services/Oficinista';
 
-function VentaBoletos(){
+export default function VentaBoletos() {
+  const [cedula, setCedula] = useState('');
+  const [cliente, setCliente] = useState(null);
 
-   return(
+  const buscar = async () => {
+    const data = await Oficinista.buscarCliente(cedula);
+    setCliente(data);
+  };
 
-      <MainLayout>
-
-         <h1>Venta Boletos</h1>
-
-      </MainLayout>
-
-   )
+  return (
+    <div>
+      <h2>Venta Boletos</h2>
+      <input placeholder="Cédula" value={cedula} onChange={e => setCedula(e.target.value)} />
+      <button onClick={buscar}>Buscar</button>
+      
+      {cliente && (
+        <div>
+          <p>Cliente: {cliente.nombre}</p>
+          <button>Continuar Venta</button>
+        </div>
+      )}
+    </div>
+  );
 }
-
-export default VentaBoletos;
