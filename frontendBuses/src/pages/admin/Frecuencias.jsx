@@ -1,16 +1,19 @@
-import MainLayout from "../../layouts/MainLayout";
+// src/pages/admin/Frecuencias.jsx
+import { useQuery } from 'react-query';
+import api from '../../services/api';
 
-function Frecuencias(){
+export default function Frecuencias() {
+  const { data, isLoading } = useQuery('frecuencias', () => api.get('/frecuencias').then(res => res.data));
+  if (isLoading) return <span>Cargando frecuencias...</span>;
 
-   return(
-
-      <MainLayout>
-
-         <h1>Frecuencias</h1>
-
-      </MainLayout>
-
-   )
+  return (
+    <div>
+      <h2>Frecuencias</h2>
+      {data?.map(frec => (
+        <div key={frec.id}>
+          Ruta: {frec.origen} - {frec.destino} | Hora: {frec.hora}
+        </div>
+      ))}
+    </div>
+  );
 }
-
-export default Frecuencias;
