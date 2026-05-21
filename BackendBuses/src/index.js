@@ -6,7 +6,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Asegurarnos de inicializar la conexión a la DB antes de levantar el servidor
 const db = require('./config/db');
 
 // Rutas
@@ -17,8 +16,8 @@ app.use('/api/ciudades',   require('./routes/ciudades'));
 app.use('/api/auth',       require('./routes/auth.routes'));
 app.use('/api', require('./routes/validaciones.routes'));
 app.use('/api/tipo-descuento', require('./routes/descuento.routes'));
+app.use('/api/buses',      require('./routes/buses'));
 
-//Importación y uso de rutas de frecuencias
 const frecuenciasRoutes = require('./routes/frecuencias');
 app.use('/api/frecuencias', frecuenciasRoutes);
 

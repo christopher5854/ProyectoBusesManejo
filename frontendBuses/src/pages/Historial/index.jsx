@@ -33,6 +33,19 @@ export default function HistorialPage() {
       .finally(() => setLoading(false));
   }, [navigate]);
 
+  const descargarPDF = async (id) => {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API}/boletos/${id}/pdf`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `boleto-${id}.pdf`;
+    a.click();
+  };
+
   if (loading) return (
     <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
       <CircularProgress />
@@ -96,10 +109,10 @@ export default function HistorialPage() {
                 <Chip label={seleccionado.estado} color={estadoColor(seleccionado.estado)} size="small" sx={{ alignSelf: "flex-start", mt: 0.5 }} />
               </Box>
               <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
-                <QRCode value={seleccionado.codigo} size={160} />
+                <QRCode value={seleccionado.codigo || "sin-codigo"} size={160} />
               </Box>
               <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
-                <Button variant="contained" onClick={() => window.open(`${API}/boletos/${seleccionado.id}/pdf`, "_blank")}>
+                <Button variant="contained" onClick={() => descargarPDF(seleccionado.id)}>
                   Descargar PDF
                 </Button>
                 <Button variant="outlined" onClick={() => setSeleccionado(null)}>

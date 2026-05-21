@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # Base de datos asignada a Sonia
   postgres:
     image: postgres:17
     container_name: buses_postgres
@@ -14,8 +13,8 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
-  # Tu servidor Backend
   backend:
     build: ./BackendBuses
     container_name: buses_backend
@@ -33,7 +32,6 @@ services:
     ports:
       - "3000:3000"
 
-  # App de React para Juan y Abel
   frontend:
     build: ./frontendBuses
     container_name: buses_frontend
@@ -43,7 +41,6 @@ services:
     ports:
       - "5173:5173"
 
-  # Pruebas de Email (Tu tarea)
   mailhog:
     image: mailhog/mailhog
     container_name: buses_mailhog
@@ -51,7 +48,6 @@ services:
       - "1025:1025"
       - "8025:8025"
 
-  # Administrador de BD
   pgadmin:
     image: dpage/pgadmin4
     container_name: buses_pgadmin
