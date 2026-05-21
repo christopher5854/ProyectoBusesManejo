@@ -70,7 +70,7 @@ const Hero = () => {
               >
                 <MenuItem value="" disabled>Ciudad de salida...</MenuItem>
                 {ciudades.map(c => (
-                  <MenuItem key={c.id} value={c.id}>{c.nombre}</MenuItem>
+                  <MenuItem key={c.nombre} value={c.nombre}>{c.nombre}</MenuItem>
                 ))}
               </Select>
             </FormControl>
@@ -91,7 +91,7 @@ const Hero = () => {
               >
                 <MenuItem value="" disabled>Ciudad de llegada...</MenuItem>
                 {ciudades.map(c => (
-                  <MenuItem key={c.id} value={c.id}>{c.nombre}</MenuItem>
+                  <MenuItem key={c.nombre} value={c.nombre}>{c.nombre}</MenuItem>
                 ))}
               </Select>
             </FormControl>
