@@ -1,0 +1,49 @@
+/* ── Contenedor ── */
+.statsbar {
+  background-color: #B91C1C;
+  padding: 1.25rem 2rem;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+/* ── Cada stat ── */
+.statsbar__item {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 4px;
+}
+
+/* ── Ícono ── */
+.statsbar__icon {
+  color: rgba(255, 255, 255, 0.85) !important;
+  font-size: 22px !important;
+  margin-bottom: 2px;
+}
+
+/* ── Número ── */
+.statsbar__numero {
+  font-family: 'Sora', sans-serif !important;
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  line-height: 1 !important;
+}
+
+/* ── Label ── */
+.statsbar__label {
+  font-size: 11px !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  margin-top: 2px !important;
+  text-align: center;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .statsbar {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+    padding: 1.5rem 1rem;
+  }
+}

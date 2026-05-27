@@ -1,0 +1,91 @@
+/* ── Sección ── */
+.features {
+  background-color: #f9fafb;
+  padding: 2.5rem 2rem;
+}
+
+/* ── Encabezado ── */
+.features__header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.features__eyebrow {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  color: #B91C1C !important;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.35rem !important;
+}
+
+.features__title {
+  font-family: 'Sora', sans-serif !important;
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  color: #111827 !important;
+}
+
+/* ── Grid ── */
+.features__grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+/* ── Tarjeta ── */
+.features__card {
+  background-color: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 12px !important;
+  padding: 1.1rem !important;
+  transition: box-shadow 0.2s, border-color 0.2s;
+  cursor: default;
+}
+
+.features__card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06) !important;
+  border-color: #d1d5db !important;
+}
+
+/* ── Ícono ── */
+.features__icon-wrap {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 9px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-bottom: 0.65rem !important;
+}
+
+.features__icon {
+  font-size: 18px !important;
+}
+
+/* ── Texto ── */
+.features__card-titulo {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: #111827 !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.features__card-desc {
+  font-size: 12px !important;
+  color: #6b7280 !important;
+  line-height: 1.5 !important;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .features__grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .features__grid {
+    grid-template-columns: 1fr !important;
+  }
+}
