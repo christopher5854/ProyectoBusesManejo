@@ -128,7 +128,7 @@ async function seed() {
     const busId = busRes.rows[0].id;
 
     await client.query(
-      `INSERT INTO hoja_ruta (cooperativa_id, frecuencia_id, bus_id, fecha_inicio, fecha_fin, generacion, activa)
+      `INSERT INTO hoja_ruta (cooperativa_id, frecuencia_id, bus_id, fecha_inicio, fecha_fin, tipo, activa)
        VALUES ($1, $2, $3, '2026-05-01', '2026-12-31', 'manual', true)
        ON CONFLICT DO NOTHING`,
       [cooperativaId, frecuenciaId, busId]
@@ -144,10 +144,10 @@ async function seed() {
       fecha.setDate(fecha.getDate() + i);
       const fechaStr = fecha.toISOString().slice(0, 10);
       await client.query(
-        `INSERT INTO ruta (hoja_ruta_id, frecuencia_id, fecha_ruta, estado, observacion)
-         VALUES ($1, $2, $3, 'programada', 'Ruta de prueba')
+        `INSERT INTO ruta (frecuencia_id, bus_id, fecha_ruta, estado)
+         VALUES ($1, $2, $3, 'programada')
          ON CONFLICT DO NOTHING`,
-        [hojaRutaId, frecuenciaId, fechaStr]
+        [frecuenciaId, busId, fechaStr]
       );
     }
     console.log('✅ Rutas diarias insertadas');
