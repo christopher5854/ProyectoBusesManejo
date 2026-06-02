@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   Container, Typography, Box, Button, CircularProgress
 } from "@mui/material";
+import api from "../../services/api";
 
 function Asiento({ asiento, seleccionados, onToggle, maxSeleccion }) {
   const isSelected = seleccionados.includes(asiento.id);
@@ -51,15 +52,22 @@ export default function AsientosPage() {
   const [asientos, setAsientos] = useState([]);
   const [seleccionados, setSeleccionados] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [rutaSeleccionada, setRutaSeleccionada] = useState(null);
 
   useEffect(() => {
-    fetch(`http://localhost:3000/api/buses/${rutaId}/asientos`)
-      .then((res) => res.json())
-      .then((data) => {
+    const loadAsientos = async () => {
+      try {
+        const routeData = JSON.parse(localStorage.getItem('rutaSeleccionada') || 'null');
+        setRutaSeleccionada(routeData);
+        const { data } = await api.get(`/buses/${rutaId}/asientos`);
         setAsientos(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error('Error cargando asientos:', err);
+      } finally {
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      }
+    };
+    loadAsientos();
   }, [rutaId]);
 
   const toggleAsiento = (asiento) => {
@@ -82,6 +90,9 @@ export default function AsientosPage() {
     );
     localStorage.setItem("asientosSeleccionados", JSON.stringify(asientosSeleccionados));
     localStorage.setItem("rutaId", rutaId);
+    if (rutaSeleccionada) {
+      localStorage.setItem("rutaSeleccionada", JSON.stringify(rutaSeleccionada));
+    }
     navigate("/pago");
   };
 
@@ -93,6 +104,15 @@ export default function AsientosPage() {
       <Typography variant="body2" color="text.secondary" mb={2}>
         Selecciona {pasajeros} asiento(s)
       </Typography>
+      {rutaSeleccionada && (
+        <Box sx={{ mb: 3, p: 2, border: '1px solid', borderColor: 'grey.300', borderRadius: 2 }}>
+          <Typography variant="subtitle2" fontWeight="bold">Ruta seleccionada</Typography>
+          <Typography variant="body2">{rutaSeleccionada.origen} → {rutaSeleccionada.destino}</Typography>
+          <Typography variant="body2">Fecha: {new Date(rutaSeleccionada.fecha).toLocaleDateString()}</Typography>
+          <Typography variant="body2">Salida: {rutaSeleccionada.hora_salida}</Typography>
+          <Typography variant="body2">Precio por asiento: ${Number(rutaSeleccionada.precio || 0).toFixed(2)}</Typography>
+        </Box>
+      )}
 
       {/* Leyenda */}
       <Box sx={{ display: "flex", gap: 3, mb: 3 }}>

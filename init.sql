@@ -122,7 +122,7 @@ CREATE TABLE IF NOT EXISTS hoja_ruta (
   bus_id INT NOT NULL REFERENCES bus(id),
   fecha_inicio DATE NOT NULL,
   fecha_fin DATE,
-  tipo VARCHAR(20) DEFAULT 'manual',
+  generacion VARCHAR(20) DEFAULT 'manual',
   activa BOOLEAN NOT NULL DEFAULT true
 );
 
@@ -130,9 +130,10 @@ CREATE TABLE IF NOT EXISTS hoja_ruta (
 CREATE TABLE IF NOT EXISTS ruta (
   id SERIAL PRIMARY KEY,
   frecuencia_id INT NOT NULL REFERENCES frecuencia(id),
-  bus_id INT NOT NULL REFERENCES bus(id),
+  hoja_ruta_id INT NOT NULL REFERENCES hoja_ruta(id),
   fecha_ruta DATE NOT NULL,
-  estado VARCHAR(20) DEFAULT 'programada'
+  estado VARCHAR(20) DEFAULT 'programada',
+  observacion TEXT
 );
 
 -- ─── BOLETO ──────────────────────────────────────────────────
@@ -229,10 +230,13 @@ INSERT INTO cooperativa (nombre, ruc, telefono, email) VALUES
   ('Flota Pelileo', '1891234560001', '032123456', 'info@flotapelileo.com')
 ON CONFLICT DO NOTHING;
 
--- Usuario admin (password: password)
+-- Usuarios de ejemplo (password: password)
 INSERT INTO usuario (rol_id, cedula, nombres, apellidos, email, password_hash) VALUES
-  (1, '1234567890', 'Admin', 'Sistema', 'admin@buses.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi')
-ON CONFLICT DO NOTHING;
+  (1, '1234567890', 'Admin', 'Sistema', 'admin@buses.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'),
+  (5, '0999999999', 'Cliente', 'Prueba', 'cliente@test.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'),
+  (3, '1800000001', 'Oficinista', 'Prueba', 'oficinista@test.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'),
+  (4, '1812345678', 'Chofer', 'Bus', 'personal@bus.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi')
+ON CONFLICT (email) DO NOTHING;
 
 -- Bus de prueba
 INSERT INTO bus (cooperativa_id, placa, capacidad_total, numero_interno, marca_chasis) VALUES

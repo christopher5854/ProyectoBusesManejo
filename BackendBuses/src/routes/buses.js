@@ -39,9 +39,10 @@ router.get('/:id/asientos', async (req, res) => {
   const { id } = req.params;
   try {
     const busResult = await pool.query(
-      `SELECT hr.bus_id, f.precio FROM hoja_ruta hr 
-       JOIN frecuencia f ON hr.frecuencia_id = f.id
-       WHERE hr.frecuencia_id = $1 AND hr.activa = true LIMIT 1`,
+      `SELECT hr.bus_id, f.precio FROM ruta r
+       JOIN hoja_ruta hr ON r.hoja_ruta_id = hr.id
+       JOIN frecuencia f ON r.frecuencia_id = f.id
+       WHERE r.id = $1 LIMIT 1`,
       [id]
     );
     if (busResult.rows.length === 0) return res.json([]);

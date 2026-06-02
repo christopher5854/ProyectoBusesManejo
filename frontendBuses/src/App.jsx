@@ -46,7 +46,7 @@ function App() {
           } />
           <Route path="/admin/metricas" element={
             <LayoutConSidebar rol="admin">
-              <DashboardAdmin />
+              <Metrics />
             </LayoutConSidebar>
           } />
           <Route path="/admin/buses" element={

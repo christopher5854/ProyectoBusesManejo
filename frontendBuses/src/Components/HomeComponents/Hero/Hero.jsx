@@ -4,6 +4,7 @@ import { Box, Typography, Button, TextField, MenuItem, Select, FormControl } fro
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import SearchIcon from "@mui/icons-material/Search";
 import { UserContext } from "../../../Context/UserContext";
+import api from '../../../services/api';
 import './Hero.css';
 import { useNavigate } from "react-router-dom";
 
@@ -19,20 +20,29 @@ const Hero = () => {
   const [tipoAsiento, setTipoAsiento] = useState("cualquiera");
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/ciudades")
-      .then((res) => res.json())
-      .then((data) => setCiudades(Array.isArray(data) ? data : []))
-      .catch((err) => console.error("Error fetching ciudades:", err));
+    const loadCiudades = async () => {
+      try {
+        const { data } = await api.get('/ciudades');
+        setCiudades(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Error fetching ciudades:", err);
+      }
+    };
 
-    fetch("http://localhost:3000/api/rutas")
-      .then((res) => res.json())
-      .then((data) => {
+    const loadRutas = async () => {
+      try {
+        const { data } = await api.get('/rutas');
         if (!Array.isArray(data)) return;
         const unicas = new Set();
         data.forEach(r => unicas.add(`${r.origen} → ${r.destino}`));
         setRutasFrecuentes(Array.from(unicas).slice(0, 5));
-      })
-      .catch((err) => console.error("Error fetching rutas:", err));
+      } catch (err) {
+        console.error("Error fetching rutas:", err);
+      }
+    };
+
+    loadCiudades();
+    loadRutas();
   }, []);
 
   return (
@@ -146,7 +156,12 @@ const Hero = () => {
             variant="contained"
             className="hero__btn-search"
             startIcon={<SearchIcon />}
-            onClick={() => navigate(`/buscar/resultados?origen=${origen}&destino=${destino}&fecha=${fecha}&pasajeros=${pasajeros}&tipoAsiento=${tipoAsiento}`)}
+            disabled={!origen || !destino || !fecha}
+            onClick={() => {
+              const busqueda = { origen, destino, fecha, pasajeros, tipoAsiento };
+              localStorage.setItem('busquedaRuta', JSON.stringify(busqueda));
+              navigate(`/buscar/resultados?origen=${encodeURIComponent(origen)}&destino=${encodeURIComponent(destino)}&fecha=${fecha}&pasajeros=${pasajeros}&tipoAsiento=${encodeURIComponent(tipoAsiento)}`);
+            }}
           >
             Buscar
           </Button>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Box, Typography, Grid, Paper, Card, CardContent } from "@mui/material";
+import { Box, Typography, Grid, Paper, Card } from "@mui/material";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
@@ -14,15 +14,11 @@ export default function DashboardAdmin() {
     totalUsuarios: 0
   });
 
-  useEffect(() => {
-    cargarEstadisticas();
-  }, []);
-
   const cargarEstadisticas = async () => {
     try {
       const res = await api.get("/estadisticas");
       setStats(res.data);
-    } catch (error) {
+    } catch {
       // Datos de ejemplo mientras no hay endpoint
       setStats({
         totalVentas: 1250,
@@ -32,6 +28,13 @@ export default function DashboardAdmin() {
       });
     }
   };
+
+  useEffect(() => {
+    const init = async () => {
+      await cargarEstadisticas();
+    };
+    init();
+  }, []);
 
   return (
     <Box>

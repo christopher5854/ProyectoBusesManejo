@@ -7,7 +7,7 @@ import {
 } from "@mui/material";
 import {
   Menu as MenuIcon, Dashboard, DirectionsBus, People,
-  Schedule, Payment, QrCodeScanner, Logout, ConfirmationNumber, EventNote, Assessment
+  Schedule, Payment, QrCodeScanner, Logout, ConfirmationNumber, EventNote
 } from "@mui/icons-material";
 
 const drawerWidth = 260;

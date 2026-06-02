@@ -5,15 +5,21 @@ import ChairIcon from "@mui/icons-material/Chair";
 import PlaceIcon from "@mui/icons-material/Place";
 import './RoutesSection.css';
 import { useState, useEffect } from "react";
+import api from '../../../services/api';
 
 const RoutesSection = () => {
   const [rutas, setRutas] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/rutas")
-      .then((res) => res.json())
-      .then((data) => setRutas(data))
-      .catch((err) => console.error("Error al obtener rutas:", err));
+    const loadRutas = async () => {
+      try {
+        const { data } = await api.get('/rutas');
+        setRutas(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Error al obtener rutas:", err);
+      }
+    };
+    loadRutas();
   }, []);
 
   return (

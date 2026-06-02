@@ -48,8 +48,11 @@ export default function Frecuencias() {
   };
 
   useEffect(() => {
-    cargarFrecuencias();
-    cargarCiudades();
+    const init = async () => {
+      await cargarFrecuencias();
+      await cargarCiudades();
+    };
+    init();
   }, []);
 
   if (loading) return <CircularProgress />;

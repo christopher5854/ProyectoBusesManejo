@@ -94,6 +94,23 @@ async function seed() {
     }
     console.log('✅ Cooperativas insertadas');
 
+    // ─── Usuarios de ejemplo ─────────────────────────────────────
+    const usuarios = [
+      { rol_id: 1, cedula: '1234567890', nombres: 'Admin', apellidos: 'Sistema', email: 'admin@buses.com', password_hash: '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi' },
+      { rol_id: 5, cedula: '0999999999', nombres: 'Cliente', apellidos: 'Prueba', email: 'cliente@test.com', password_hash: '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi' },
+      { rol_id: 3, cedula: '1800000001', nombres: 'Oficinista', apellidos: 'Prueba', email: 'oficinista@test.com', password_hash: '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi' },
+      { rol_id: 4, cedula: '1812345678', nombres: 'Chofer', apellidos: 'Bus', email: 'personal@bus.com', password_hash: '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi' },
+    ];
+    for (const u of usuarios) {
+      await client.query(
+        `INSERT INTO usuario (rol_id, cedula, nombres, apellidos, email, password_hash, activo)
+         VALUES ($1, $2, $3, $4, $5, $6, true)
+         ON CONFLICT (email) DO NOTHING`,
+        [u.rol_id, u.cedula, u.nombres, u.apellidos, u.email, u.password_hash]
+      );
+    }
+    console.log('✅ Usuarios de ejemplo insertados');
+
     // ─── Buses ───────────────────────────────────────────────────
     // Obtener el id de la cooperativa recién insertada (o existente)
     const coopRes = await client.query(`SELECT id FROM cooperativa WHERE ruc = '1891234560001'`);
@@ -116,40 +133,61 @@ async function seed() {
     await client.query(
       `INSERT INTO frecuencia (cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, duracion_estimada, numero_resolucion, precio, activa, tipo_viaje)
        VALUES ($1, $2, $3, '08:00:00', '02:30:00', 'RES-QUITO-AMBATO', 12.50, true, 'directo')
-       ON CONFLICT (id) DO NOTHING`,
+       ON CONFLICT DO NOTHING`,
       [cooperativaId, quitoId, ambatoId]
     );
-    console.log('✅ Frecuencia Quito → Ambato insertada');
+    await client.query(
+      `INSERT INTO frecuencia (cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, duracion_estimada, numero_resolucion, precio, activa, tipo_viaje)
+       VALUES ($1, $2, $3, '11:00:00', '02:20:00', 'RES-AMBATO-QUITO', 12.50, true, 'directo')
+       ON CONFLICT DO NOTHING`,
+      [cooperativaId, ambatoId, quitoId]
+    );
+    console.log('✅ Frecuencias Quito ↔ Ambato insertadas');
 
-    // ─── Hoja de ruta para esa frecuencia ────────────────────────
-    const freqRes = await client.query(`SELECT id FROM frecuencia WHERE ciudad_origen_id = $1 AND ciudad_destino_id = $2`, [quitoId, ambatoId]);
-    const frecuenciaId = freqRes.rows[0].id;
+    // ─── Hojas de ruta para ambas frecuencias Quito ↔ Ambato ─────
+    const freqRes1 = await client.query(`SELECT id FROM frecuencia WHERE ciudad_origen_id = $1 AND ciudad_destino_id = $2`, [quitoId, ambatoId]);
+    const frecuenciaId1 = freqRes1.rows[0].id;
+    const freqRes2 = await client.query(`SELECT id FROM frecuencia WHERE ciudad_origen_id = $1 AND ciudad_destino_id = $2`, [ambatoId, quitoId]);
+    const frecuenciaId2 = freqRes2.rows[0].id;
     const busRes = await client.query(`SELECT id FROM bus WHERE placa = 'ABC1234'`);
     const busId = busRes.rows[0].id;
 
     await client.query(
-      `INSERT INTO hoja_ruta (cooperativa_id, frecuencia_id, bus_id, fecha_inicio, fecha_fin, tipo, activa)
+      `INSERT INTO hoja_ruta (cooperativa_id, frecuencia_id, bus_id, fecha_inicio, fecha_fin, generacion, activa)
        VALUES ($1, $2, $3, '2026-05-01', '2026-12-31', 'manual', true)
        ON CONFLICT DO NOTHING`,
-      [cooperativaId, frecuenciaId, busId]
+      [cooperativaId, frecuenciaId1, busId]
     );
-    console.log('✅ Hoja de ruta insertada');
+    await client.query(
+      `INSERT INTO hoja_ruta (cooperativa_id, frecuencia_id, bus_id, fecha_inicio, fecha_fin, generacion, activa)
+       VALUES ($1, $2, $3, '2026-05-01', '2026-12-31', 'manual', true)
+       ON CONFLICT DO NOTHING`,
+      [cooperativaId, frecuenciaId2, busId]
+    );
+    console.log('✅ Hojas de ruta insertadas');
 
-    // ─── Rutas diarias para varios días (ejemplo) ───────────────
-    const hojaRes = await client.query(`SELECT id FROM hoja_ruta WHERE frecuencia_id = $1`, [frecuenciaId]);
-    const hojaRutaId = hojaRes.rows[0].id;
-    // Insertar rutas para los próximos 10 días desde 2026-05-20
-    for (let i = 0; i < 10; i++) {
-      const fecha = new Date('2026-05-20');
-      fecha.setDate(fecha.getDate() + i);
-      const fechaStr = fecha.toISOString().slice(0, 10);
-      await client.query(
-        `INSERT INTO ruta (frecuencia_id, bus_id, fecha_ruta, estado)
-         VALUES ($1, $2, $3, 'programada')
-         ON CONFLICT DO NOTHING`,
-        [frecuenciaId, busId, fechaStr]
-      );
+    // ─── Rutas diarias para ambos sentidos ───────────────────────
+    const hojaRutaRes1 = await client.query(`SELECT id FROM hoja_ruta WHERE frecuencia_id = $1`, [frecuenciaId1]);
+    const hojaRutaRes2 = await client.query(`SELECT id FROM hoja_ruta WHERE frecuencia_id = $1`, [frecuenciaId2]);
+    const hojaRutaId1 = hojaRutaRes1.rows[0]?.id;
+    const hojaRutaId2 = hojaRutaRes2.rows[0]?.id;
+
+    for (const [frecuenciaId, hojaRutaId] of [[frecuenciaId1, hojaRutaId1], [frecuenciaId2, hojaRutaId2]]) {
+      for (let i = 0; i < 10; i++) {
+        const fecha = new Date('2026-05-20');
+        fecha.setDate(fecha.getDate() + i);
+        const fechaStr = fecha.toISOString().slice(0, 10);
+        await client.query(
+          `INSERT INTO ruta (frecuencia_id, hoja_ruta_id, fecha_ruta, estado)
+           SELECT $1, $2, $3, 'programada'
+           WHERE NOT EXISTS (
+             SELECT 1 FROM ruta WHERE frecuencia_id = $1 AND hoja_ruta_id = $2 AND fecha_ruta = $3
+           )`,
+          [frecuenciaId, hojaRutaId, fechaStr]
+        );
+      }
     }
+    console.log('✅ Rutas diarias insertadas');
     console.log('✅ Rutas diarias insertadas');
 
     await client.query('COMMIT');

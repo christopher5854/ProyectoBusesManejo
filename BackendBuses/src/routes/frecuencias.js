@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { pool } = require('../config/db');
+const { buscarFrecuencias } = require('../controllers/frecuenciaController');
 
 // GET /api/frecuencias - Listar todas las frecuencias
 router.get('/', async (req, res) => {
@@ -37,5 +38,8 @@ router.post('/', async (req, res) => {
     res.status(500).json({ error: 'Error al crear frecuencia' });
   }
 });
+
+// GET /api/frecuencias/buscar - Buscar frecuencias por origen, destino y fecha
+router.get('/buscar', buscarFrecuencias);
 
 module.exports = router;

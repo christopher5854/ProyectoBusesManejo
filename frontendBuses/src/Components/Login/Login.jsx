@@ -2,9 +2,8 @@ import { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, Box, Button, TextField, Typography } from '@mui/material';
 import { UserContext } from '../../Context/UserContext';
+import api from '../../services/api';
 import './Login.css';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const Login = () => {
   const { setUsuario } = useContext(UserContext);
@@ -48,24 +47,9 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
-
-      const data = await response.json();
-      console.log("Datos recibidos:", data);
-      console.log("Usuario:", data.usuario);
-
-      if (!response.ok) {
-        setError(data.message || 'Error al iniciar sesion');
-        return;
-      }
-
+      const { data } = await api.post('/auth/login', form);
       localStorage.setItem('token', data.token);
       localStorage.setItem('usuario', JSON.stringify(data.usuario));
-      console.log("Usuario guardado en localStorage");
 
       setUsuario({
         id: data.usuario.id,
@@ -77,8 +61,9 @@ const Login = () => {
       });
 
       redirigirPorRol(data.usuario.rol);
-    } catch {
-      setError('No se pudo conectar con el servidor');
+    } catch (error) {
+      const message = error.response?.data?.message || error.message || 'No se pudo conectar con el servidor';
+      setError(message);
     } finally {
       setLoading(false);
     }

@@ -32,7 +32,10 @@ export default function BusesAdmin() {
   };
 
   useEffect(() => {
-    cargarBuses();
+    const init = async () => {
+      await cargarBuses();
+    };
+    init();
   }, []);
 
   if (loading) return <CircularProgress />;

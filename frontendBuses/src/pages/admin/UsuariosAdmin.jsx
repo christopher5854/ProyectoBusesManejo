@@ -19,7 +19,10 @@ export default function UsuariosAdmin() {
   };
 
   useEffect(() => {
-    cargarUsuarios();
+    const init = async () => {
+      await cargarUsuarios();
+    };
+    init();
   }, []);
 
   if (loading) return <CircularProgress />;

@@ -4,6 +4,7 @@ import {
   Container, Typography, Box, Stepper, Step, StepLabel,
   TextField, Button, RadioGroup, FormControlLabel, Radio, Alert
 } from "@mui/material";
+import api from "../../services/api";
 
 const PASOS = ["Datos pasajero", "Método de pago", "Comprobante", "Confirmación"];
 
@@ -21,7 +22,7 @@ export default function PagoPage() {
 
   const getToken = () => localStorage.getItem("token");
 
-const crearBoleto = async () => {
+  const crearBoleto = async () => {
   const token = getToken();
   if (!token) {
     setError("No has iniciado sesión. Por favor, inicia sesión primero.");
@@ -30,114 +31,65 @@ const crearBoleto = async () => {
 
   const asientos = JSON.parse(localStorage.getItem("asientosSeleccionados") || "[]");
   const rutaId = localStorage.getItem("rutaId");
-  
-  // Obtener datos de la ruta y ciudades desde localStorage o sessionStorage
-  const ciudadOrigenId = localStorage.getItem("ciudadOrigenId") || 1; // Quito por defecto
-  const ciudadDestinoId = localStorage.getItem("ciudadDestinoId") || 4; // Ambato por defecto
+  const rutaStored = JSON.parse(localStorage.getItem("rutaSeleccionada") || "null");
+  const ciudadOrigenId = rutaStored?.ciudadOrigenId || 1;
+  const ciudadDestinoId = rutaStored?.ciudadDestinoId || 4;
   const metodoPagoId = datos.metodoPago === "Transferencia" ? 1 : datos.metodoPago === "Depósito" ? 2 : 3;
-  
-  // Obtener el usuario del contexto (deberías guardarlo al login)
   const usuario = JSON.parse(localStorage.getItem("usuario") || "{}");
-  const clienteId = usuario.id || 2; // Si no hay, usar id=2 (cliente de prueba)
-  
-  // Precio base (deberías obtenerlo de la ruta seleccionada)
-  const precioBase = 12.50; // Temporal, deberías obtenerlo de la frecuencia
-  
+  const clienteId = usuario.id || 2;
+  const precioBase = rutaStored?.precio || asientos[0]?.precio || 0;
+
   try {
-    const res = await fetch("http://localhost:3000/api/boletos", {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        ruta_id: parseInt(rutaId),
-        asiento_id: asientos[0]?.id, 
-        cliente_id: clienteId,
-        ciudad_abordaje_id: parseInt(ciudadOrigenId),
-        ciudad_destino_id: parseInt(ciudadDestinoId),
-        metodo_pago_id: metodoPagoId,
-        precio_base: precioBase
-      }),
+    const res = await api.post('/boletos', {
+      ruta_id: parseInt(rutaId, 10),
+      asiento_id: asientos[0]?.id,
+      cliente_id: clienteId,
+      ciudad_abordaje_id: parseInt(ciudadOrigenId, 10),
+      ciudad_destino_id: parseInt(ciudadDestinoId, 10),
+      metodo_pago_id: metodoPagoId,
+      precio_base: precioBase
     });
-    
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(errorData.message || "Error al crear boleto");
-    }
-    
-    const data = await res.json();
-    setBoletoCreado(data.boleto);
+
+    setBoletoCreado(res.data.boleto);
     setPaso(1);
   } catch (err) {
-    setError("Error al crear el boleto: " + err.message);
+    setError("Error al crear el boleto: " + (err.response?.data?.message || err.message));
   }
 };
 
-const registrarPago = async () => {
-  const token = getToken();
-  try {
-    const res = await fetch(`http://localhost:3000/api/boletos/${boletoCreado.id}/pago`, {
-      method: "PUT",
-      headers: { 
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-      body: JSON.stringify({ referencia_bancaria: datos.referencia }),
-    });
-    
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(errorData.message || "Error al registrar pago");
+  const registrarPago = async () => {
+    try {
+      await api.put(`/boletos/${boletoCreado.id}/pago`, {
+        referencia_bancaria: datos.referencia,
+      });
+      setPaso(2);
+    } catch (err) {
+      setError("Error al registrar el pago: " + (err.response?.data?.message || err.message));
     }
-    
-    setPaso(2);
-  } catch (err) {
-    setError("Error al registrar el pago: " + err.message);
-  }
-};
+  };
 
   const subirComprobante = async () => {
-    const token = getToken();
-    const formData = new FormData();
-    formData.append("comprobante", datos.comprobante);
-    
     try {
-      const res = await fetch(`http://localhost:3000/api/boletos/${boletoCreado.id}/comprobante`, {
-        method: "POST",
+      const formData = new FormData();
+      formData.append("comprobante", datos.comprobante);
+      await api.post(`/boletos/${boletoCreado.id}/comprobante`, formData, {
         headers: {
-          "Authorization": `Bearer ${token}`
-        },
-        body: formData,
+          'Content-Type': 'multipart/form-data'
+        }
       });
-      
-      if (!res.ok) throw new Error("Error al subir comprobante");
-      
       setPaso(3);
     } catch (err) {
-      setError("Error al subir el comprobante: " + err.message);
+      setError("Error al subir el comprobante: " + (err.response?.data?.message || err.message));
     }
   };
 
   const descargarPDF = async () => {
-    const token = getToken();
-    if (!token) {
-      setError("No hay sesión iniciada. Por favor, inicia sesión.");
-      return;
-    }
-
     try {
-      const response = await fetch(`http://localhost:3000/api/boletos/${boletoCreado.id}/pdf`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await api.get(`/boletos/${boletoCreado.id}/pdf`, {
+        responseType: 'blob'
       });
 
-      if (!response.ok) {
-        throw new Error("Error al descargar PDF");
-      }
-
-      const blob = await response.blob();
+      const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -147,7 +99,7 @@ const registrarPago = async () => {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      setError("Error al descargar el PDF: " + err.message);
+      setError("Error al descargar el PDF: " + (err.response?.data?.message || err.message));
     }
   };
 
