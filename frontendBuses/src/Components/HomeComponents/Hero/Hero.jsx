@@ -29,7 +29,7 @@ const Hero = () => {
       .then((data) => {
         if (!Array.isArray(data)) return;
         const unicas = new Set();
-        data.forEach(r => unicas.add(`${r.ciudad_origen} → ${r.ciudad_destino}`));
+        data.forEach(r => unicas.add(`${r.origen} → ${r.destino}`));
         setRutasFrecuentes(Array.from(unicas).slice(0, 5));
       })
       .catch((err) => console.error("Error fetching rutas:", err));

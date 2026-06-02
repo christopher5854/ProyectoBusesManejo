@@ -2,6 +2,39 @@ const express = require('express');
 const router = express.Router();
 const { pool } = require('../config/db');
 
+// GET /api/buses - Listar todos los buses
+router.get('/', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT b.*, c.nombre as cooperativa_nombre 
+       FROM bus b
+       LEFT JOIN cooperativa c ON b.cooperativa_id = c.id
+       ORDER BY b.id`
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al obtener buses' });
+  }
+});
+
+// POST /api/buses - Crear un nuevo bus
+router.post('/', async (req, res) => {
+  const { placa, numero_interno, capacidad_total, marca_chasis, cooperativa_id } = req.body;
+  try {
+    const result = await pool.query(
+      `INSERT INTO bus (placa, numero_interno, capacidad_total, marca_chasis, cooperativa_id)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [placa, numero_interno, capacidad_total, marca_chasis, cooperativa_id || 1]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al crear bus' });
+  }
+});
+
+// GET /api/buses/:id/asientos - Obtener asientos de un bus
 router.get('/:id/asientos', async (req, res) => {
   const { id } = req.params;
   try {

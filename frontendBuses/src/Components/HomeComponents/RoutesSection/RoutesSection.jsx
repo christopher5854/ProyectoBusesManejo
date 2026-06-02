@@ -4,9 +4,6 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import ChairIcon from "@mui/icons-material/Chair";
 import PlaceIcon from "@mui/icons-material/Place";
 import './RoutesSection.css';
-
-
-
 import { useState, useEffect } from "react";
 
 const RoutesSection = () => {
@@ -21,20 +18,15 @@ const RoutesSection = () => {
 
   return (
     <section className="routes">
-
-      {/* Encabezado */}
       <Box className="routes__header">
         <Typography className="routes__eyebrow">Nuestras rutas</Typography>
         <Typography className="routes__title">Destinos disponibles</Typography>
       </Box>
 
-      {/* Grid de tarjetas */}
       <Box className="routes__grid">
         {rutas.length > 0 ? (
           rutas.map((ruta, index) => (
-            <Box key={ruta.ruta_id || index} className="routes__card">
-  
-              {/* Top: badge + precio */}
+            <Box key={ruta.id || index} className="routes__card">
               <Box className="routes__card-top">
                 <Chip
                   label={ruta.estado || "Disponible"}
@@ -45,17 +37,15 @@ const RoutesSection = () => {
                       : "routes__badge-directo"
                   }
                 />
-                <Typography className="routes__precio">${ruta.precio}</Typography>
+                <Typography className="routes__precio">$0.00</Typography>
               </Box>
-  
-              {/* Ruta: origen → destino */}
+
               <Box className="routes__ruta">
-                <Typography className="routes__ciudad">{ruta.ciudad_origen}</Typography>
+                <Typography className="routes__ciudad">{ruta.origen}</Typography>
                 <Typography className="routes__flecha">→</Typography>
-                <Typography className="routes__ciudad">{ruta.ciudad_destino}</Typography>
+                <Typography className="routes__ciudad">{ruta.destino}</Typography>
               </Box>
-  
-              {/* Chips de info */}
+
               <Box className="routes__chips">
                 <Box className="routes__chip">
                   <AccessTimeIcon className="routes__chip-icon" />
@@ -63,21 +53,21 @@ const RoutesSection = () => {
                 </Box>
                 <Box className="routes__chip">
                   <ChairIcon className="routes__chip-icon" />
-                  <Typography className="routes__chip-text">{ruta.asientos_libres} libres</Typography>
+                  <Typography className="routes__chip-text">20 libres</Typography>
                 </Box>
                 <Box className="routes__chip">
                   <PlaceIcon className="routes__chip-icon" />
-                  <Typography className="routes__chip-text">{new Date(ruta.fecha_ruta).toLocaleDateString()}</Typography>
+                  <Typography className="routes__chip-text">
+                    {new Date(ruta.fecha_ruta).toLocaleDateString()}
+                  </Typography>
                 </Box>
               </Box>
-  
             </Box>
           ))
         ) : (
           <Typography className="routes__empty">No hay rutas disponibles en este momento.</Typography>
         )}
       </Box>
-
     </section>
   );
 };

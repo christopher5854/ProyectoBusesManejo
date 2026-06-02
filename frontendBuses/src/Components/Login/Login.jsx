@@ -27,7 +27,7 @@ const Login = () => {
         navigate('/admin/dashboard');
         break;
       case 'oficinista':
-        navigate('/oficina/ventas');
+        navigate('/oficinista/dashboard');
         break;
       case 'cliente':
         navigate('/home');
@@ -55,6 +55,8 @@ const Login = () => {
       });
 
       const data = await response.json();
+      console.log("Datos recibidos:", data);
+      console.log("Usuario:", data.usuario);
 
       if (!response.ok) {
         setError(data.message || 'Error al iniciar sesion');
@@ -62,6 +64,8 @@ const Login = () => {
       }
 
       localStorage.setItem('token', data.token);
+      localStorage.setItem('usuario', JSON.stringify(data.usuario));
+      console.log("Usuario guardado en localStorage");
 
       setUsuario({
         id: data.usuario.id,

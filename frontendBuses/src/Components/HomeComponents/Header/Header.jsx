@@ -1,6 +1,5 @@
 "use client";
-//import { useContext, useState } from "react";
-import {AppBar,Toolbar,Typography,Button,Box,} from "@mui/material";
+import { AppBar, Toolbar, Typography, Button, Box } from "@mui/material";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import { useNavigate } from 'react-router-dom';
 import './Header.css';
@@ -34,7 +33,6 @@ const Header = () => {
           ))}
         </Box>
 
-        {/* Actions */}
         <Box className="header__actions">
           <Button
             variant="outlined"
@@ -46,6 +44,9 @@ const Header = () => {
           </Button>
           <Button variant="contained" size="small" className="header__btn-primary">
             Comprar pasaje
+          </Button>
+          <Button color="inherit" onClick={() => navigate('/historial')}>
+            Mi historial
           </Button>
         </Box>
 

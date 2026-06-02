@@ -19,53 +19,135 @@ export default function PagoPage() {
 
   const handleChange = (e) => setDatos({ ...datos, [e.target.name]: e.target.value });
 
-  const crearBoleto = async () => {
-    const asientos = JSON.parse(localStorage.getItem("asientosSeleccionados") || "[]");
-    const rutaId = localStorage.getItem("rutaId");
-    try {
-      const res = await fetch("http://localhost:3000/api/boletos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ruta_id: rutaId,
-          asiento_ids: asientos.map((a) => a.id),
-          cedula: datos.cedula,
-          nombre: datos.nombre,
-          email: datos.email,
-        }),
-      });
-      const data = await res.json();
-      setBoletoCreado(data);
-      setPaso(1);
-    } catch {
-      setError("Error al crear el boleto. Intenta de nuevo.");
-    }
-  };
+  const getToken = () => localStorage.getItem("token");
 
-  const registrarPago = async () => {
-    try {
-      await fetch(`http://localhost:3000/api/boletos/${boletoCreado.id}/pago`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ referencia: datos.referencia, metodo: datos.metodoPago }),
-      });
-      setPaso(2);
-    } catch {
-      setError("Error al registrar el pago.");
+const crearBoleto = async () => {
+  const token = getToken();
+  if (!token) {
+    setError("No has iniciado sesión. Por favor, inicia sesión primero.");
+    return;
+  }
+
+  const asientos = JSON.parse(localStorage.getItem("asientosSeleccionados") || "[]");
+  const rutaId = localStorage.getItem("rutaId");
+  
+  // Obtener datos de la ruta y ciudades desde localStorage o sessionStorage
+  const ciudadOrigenId = localStorage.getItem("ciudadOrigenId") || 1; // Quito por defecto
+  const ciudadDestinoId = localStorage.getItem("ciudadDestinoId") || 4; // Ambato por defecto
+  const metodoPagoId = datos.metodoPago === "Transferencia" ? 1 : datos.metodoPago === "Depósito" ? 2 : 3;
+  
+  // Obtener el usuario del contexto (deberías guardarlo al login)
+  const usuario = JSON.parse(localStorage.getItem("usuario") || "{}");
+  const clienteId = usuario.id || 2; // Si no hay, usar id=2 (cliente de prueba)
+  
+  // Precio base (deberías obtenerlo de la ruta seleccionada)
+  const precioBase = 12.50; // Temporal, deberías obtenerlo de la frecuencia
+  
+  try {
+    const res = await fetch("http://localhost:3000/api/boletos", {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        ruta_id: parseInt(rutaId),
+        asiento_id: asientos[0]?.id, 
+        cliente_id: clienteId,
+        ciudad_abordaje_id: parseInt(ciudadOrigenId),
+        ciudad_destino_id: parseInt(ciudadDestinoId),
+        metodo_pago_id: metodoPagoId,
+        precio_base: precioBase
+      }),
+    });
+    
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.message || "Error al crear boleto");
     }
-  };
+    
+    const data = await res.json();
+    setBoletoCreado(data.boleto);
+    setPaso(1);
+  } catch (err) {
+    setError("Error al crear el boleto: " + err.message);
+  }
+};
+
+const registrarPago = async () => {
+  const token = getToken();
+  try {
+    const res = await fetch(`http://localhost:3000/api/boletos/${boletoCreado.id}/pago`, {
+      method: "PUT",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({ referencia_bancaria: datos.referencia }),
+    });
+    
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.message || "Error al registrar pago");
+    }
+    
+    setPaso(2);
+  } catch (err) {
+    setError("Error al registrar el pago: " + err.message);
+  }
+};
 
   const subirComprobante = async () => {
+    const token = getToken();
     const formData = new FormData();
     formData.append("comprobante", datos.comprobante);
+    
     try {
-      await fetch(`http://localhost:3000/api/boletos/${boletoCreado.id}/comprobante`, {
+      const res = await fetch(`http://localhost:3000/api/boletos/${boletoCreado.id}/comprobante`, {
         method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        },
         body: formData,
       });
+      
+      if (!res.ok) throw new Error("Error al subir comprobante");
+      
       setPaso(3);
-    } catch {
-      setError("Error al subir el comprobante.");
+    } catch (err) {
+      setError("Error al subir el comprobante: " + err.message);
+    }
+  };
+
+  const descargarPDF = async () => {
+    const token = getToken();
+    if (!token) {
+      setError("No hay sesión iniciada. Por favor, inicia sesión.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:3000/api/boletos/${boletoCreado.id}/pdf`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al descargar PDF");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `boleto_${boletoCreado.codigo}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError("Error al descargar el PDF: " + err.message);
     }
   };
 
@@ -85,7 +167,6 @@ export default function PagoPage() {
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-      {/* Paso 0 — Datos del pasajero */}
       {paso === 0 && (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <Typography variant="h6">Datos del pasajero</Typography>
@@ -105,7 +186,6 @@ export default function PagoPage() {
         </Box>
       )}
 
-      {/* Paso 1 — Método de pago */}
       {paso === 1 && (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <Typography variant="h6">Método de pago</Typography>
@@ -127,7 +207,6 @@ export default function PagoPage() {
         </Box>
       )}
 
-      {/* Paso 2 — Subir comprobante */}
       {paso === 2 && (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <Typography variant="h6">Subir comprobante</Typography>
@@ -151,7 +230,6 @@ export default function PagoPage() {
         </Box>
       )}
 
-      {/* Paso 3 — Confirmación */}
       {paso === 3 && boletoCreado && (
         <Box sx={{ textAlign: "center" }}>
           <Typography variant="h5" color="success.main" fontWeight="bold" mb={2}>
@@ -164,7 +242,7 @@ export default function PagoPage() {
             <Box component="img" src={boletoCreado.qr} alt="QR" sx={{ width: 160, height: 160, mx: "auto", display: "block", my: 2 }} />
           )}
           <Box sx={{ display: "flex", gap: 2, justifyContent: "center", mt: 2 }}>
-            <Button variant="outlined" href={`http://localhost:3000/api/boletos/${boletoCreado.id}/pdf`} target="_blank">
+            <Button variant="outlined" onClick={descargarPDF}>
               Descargar PDF
             </Button>
             <Button variant="contained" onClick={() => navigate("/")}>
