@@ -21,24 +21,28 @@ const Login = () => {
   };
 
   const redirigirPorRol = (rol) => {
-    switch (rol) {
+    const normalizedRol = String(rol || '').toLowerCase();
+
+    switch (normalizedRol) {
       case 'admin':
-        navigate('/admin/dashboard');
+        navigate('/admin/dashboard', { replace: true });
         break;
       case 'oficinista':
-        navigate('/oficinista/dashboard');
+        navigate('/oficinista/dashboard', { replace: true });
         break;
       case 'cliente':
-        navigate('/home');
+      case 'client':
+        navigate('/home', { replace: true });
         break;
       case 'personal_bus':
-        navigate('/bus/escaneo');
+      case 'personal bus':
+        navigate('/bus/escaneo', { replace: true });
         break;
       case 'cooperativa':
-        navigate('/cooperativa/dashboard');
+        navigate('/cooperativa/dashboard', { replace: true });
         break;
       default:
-        navigate('/home');
+        navigate('/home', { replace: true });
     }
   };
 

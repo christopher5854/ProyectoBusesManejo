@@ -1,3 +1,4 @@
+import { useContext } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
@@ -23,17 +24,22 @@ import VentaBoletos from './pages/oficinista/VentaBoletos';
 // Bus pages
 import ScannerQR from './pages/bus-personal/ScannerQR';
 
+import { UserContext } from './Context/UserContext';
 import './App.css';
 
 const getDefaultRoute = (rol) => {
-  switch (rol) {
+  const normalizedRol = String(rol || '').toLowerCase();
+
+  switch (normalizedRol) {
     case 'admin':
       return '/admin/dashboard';
     case 'oficinista':
       return '/oficinista/dashboard';
     case 'cliente':
+    case 'client':
       return '/home';
     case 'personal_bus':
+    case 'personal bus':
       return '/bus/escaneo';
     default:
       return '/home';
@@ -41,8 +47,9 @@ const getDefaultRoute = (rol) => {
 };
 
 function App() {
+  const { usuario } = useContext(UserContext);
   const token = localStorage.getItem('token');
-  const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
+  const currentUsuario = usuario?.rol ? usuario : JSON.parse(localStorage.getItem('usuario') || 'null');
   const isAuthenticated = Boolean(token);
 
   return (
@@ -52,16 +59,28 @@ function App() {
           {/* Rutas sin sidebar (públicas) */}
           <Route
             path="/"
-            element={isAuthenticated ? <Navigate to={getDefaultRoute(usuario?.rol)} replace /> : <Login />}
+            element={isAuthenticated ? <Navigate to={getDefaultRoute(currentUsuario?.rol)} replace /> : <Login />}
           />
           <Route
             path="/login"
-            element={isAuthenticated ? <Navigate to={getDefaultRoute(usuario?.rol)} replace /> : <Login />}
+            element={isAuthenticated ? <Navigate to={getDefaultRoute(currentUsuario?.rol)} replace /> : <Login />}
           />
-          <Route path="/home" element={<Home />} />
-          <Route path="/buscar/resultados" element={<ResultadosPage />} />
-          <Route path="/asientos" element={<AsientosPage />} />
-          <Route path="/pago" element={<PagoPage />} />
+          <Route
+            path="/home"
+            element={isAuthenticated ? <Home /> : <Navigate to="/login" replace />}
+          />
+          <Route
+            path="/buscar/resultados"
+            element={isAuthenticated ? <ResultadosPage /> : <Navigate to="/login" replace />}
+          />
+          <Route
+            path="/asientos"
+            element={isAuthenticated ? <AsientosPage /> : <Navigate to="/login" replace />}
+          />
+          <Route
+            path="/pago"
+            element={isAuthenticated ? <PagoPage /> : <Navigate to="/login" replace />}
+          />
 
           {/* Rutas con sidebar - Admin */}
           <Route path="/admin/dashboard" element={

@@ -6,7 +6,7 @@ import {
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 
-const API = "http://localhost:3000/api";
+const API = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
 export default function PagosPendientes() {
   const [pagos, setPagos] = useState([]);

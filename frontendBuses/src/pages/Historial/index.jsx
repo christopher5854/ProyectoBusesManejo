@@ -7,7 +7,7 @@ import {
 } from "@mui/material";
 import QRCode from "react-qr-code";
 
-const API = "http://localhost:3000/api";
+const API = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
 function estadoColor(estado) {
   if (estado === "confirmado") return "success";

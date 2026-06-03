@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AppBar, Box, Toolbar, Typography, IconButton,
@@ -9,6 +9,7 @@ import {
   Menu as MenuIcon, Dashboard, DirectionsBus, People,
   Schedule, Payment, QrCodeScanner, Logout, ConfirmationNumber, EventNote
 } from "@mui/icons-material";
+import { UserContext } from "../Context/UserContext";
 
 const drawerWidth = 260;
 
@@ -36,6 +37,7 @@ admin: [
 export default function LayoutConSidebar({ rol, children }) {
   const [open, setOpen] = useState(true);
   const navigate = useNavigate();
+  const { resetUsuario } = useContext(UserContext);
   
   const usuario = JSON.parse(localStorage.getItem("usuario") || "{}");
   const menuItems = menus[rol] || menus.cliente;
@@ -43,6 +45,7 @@ export default function LayoutConSidebar({ rol, children }) {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('usuario');
+    resetUsuario();
     navigate('/login', { replace: true });
   };
 

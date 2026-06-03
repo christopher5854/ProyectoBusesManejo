@@ -1,16 +1,20 @@
 "use client";
+import { useContext } from 'react';
 import { AppBar, Toolbar, Typography, Button, Box } from "@mui/material";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import { useNavigate } from 'react-router-dom';
+import { UserContext } from '../../../Context/UserContext';
 import './Header.css';
 
 const Header = () => {
   const navigate = useNavigate();
+  const { resetUsuario } = useContext(UserContext);
   const isAuthenticated = Boolean(localStorage.getItem('token'));
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('usuario');
+    resetUsuario();
     navigate('/login', { replace: true });
   };
 

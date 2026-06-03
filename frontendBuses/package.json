@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "start": "node -e \"console.log('Conectado con el back correctamente')\" && vite",
-    "dev": "node -e \"console.log('Conectado con el back correctamente')\" && vite",
+    "start": "vite --host 127.0.0.1",
+    "dev": "vite --host 127.0.0.1",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
