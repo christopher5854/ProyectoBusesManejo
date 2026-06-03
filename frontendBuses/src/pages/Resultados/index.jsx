@@ -4,12 +4,30 @@ import {
   Box, Container, Typography, Card, CardContent,
   CardMedia, Button, Chip, CircularProgress
 } from "@mui/material";
+import api from "../../services/api";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import AirlineSeatReclineNormalIcon from "@mui/icons-material/AirlineSeatReclineNormal";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 
 function BusCard({ ruta, pasajeros }) {
   const navigate = useNavigate();
+
+  const handleSeleccionar = () => {
+    localStorage.setItem('rutaId', ruta.id);
+    localStorage.setItem('rutaSeleccionada', JSON.stringify({
+      id: ruta.id,
+      origen: ruta.origen,
+      destino: ruta.destino,
+      fecha: ruta.fecha_ruta,
+      hora_salida: ruta.hora_salida,
+      precio: ruta.precio,
+      ciudadOrigenId: ruta.ciudad_origen_id,
+      ciudadDestinoId: ruta.ciudad_destino_id,
+      cooperativa: ruta.cooperativa,
+      placa: ruta.placa,
+    }));
+    navigate(`/asientos?rutaId=${ruta.id}&pasajeros=${pasajeros}`);
+  };
 
   return (
     <Card sx={{ display: "flex", mb: 2, borderRadius: 3, boxShadow: 2, "&:hover": { boxShadow: 5 } }}>
@@ -27,7 +45,7 @@ function BusCard({ ruta, pasajeros }) {
       )}
       <CardContent sx={{ flex: 1, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <Box>
-          <Typography variant="h6" fontWeight="bold">{ruta.cooperativa?.nombre || "Cooperativa"}</Typography>
+          <Typography variant="h6" fontWeight="bold">{ruta.cooperativa || "Cooperativa"}</Typography>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.5 }}>
             <AccessTimeIcon fontSize="small" color="action" />
             <Typography variant="body2" color="text.secondary">{ruta.hora_salida}</Typography>
@@ -35,7 +53,7 @@ function BusCard({ ruta, pasajeros }) {
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.5 }}>
             <AirlineSeatReclineNormalIcon fontSize="small" color="action" />
             <Typography variant="body2" color="text.secondary">
-              {ruta.asientos_disponibles} asientos disponibles
+              {ruta.asientos_disponibles ?? "N/D"} asientos disponibles
             </Typography>
           </Box>
           <Chip
@@ -48,12 +66,12 @@ function BusCard({ ruta, pasajeros }) {
         </Box>
         <Box sx={{ textAlign: "right" }}>
           <Typography variant="h5" fontWeight="bold" color="primary">
-            ${Number(ruta.precio_base || 0).toFixed(2)}
+            ${Number(ruta.precio || ruta.precio_base || 0).toFixed(2)}
           </Typography>
           <Button
             variant="contained"
             sx={{ mt: 1 }}
-            onClick={() => navigate(`/asientos?rutaId=${ruta.id}&pasajeros=${pasajeros}`)}
+            onClick={handleSeleccionar}
           >
             Seleccionar
           </Button>
@@ -75,16 +93,30 @@ export default function ResultadosPage() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    fetch(`http://localhost:3000/api/frecuencias/buscar?origen=${origen}&destino=${destino}&fecha=${fecha}`)
-      .then((res) => res.json())
-      .then((data) => {
+    const fetchRutas = async () => {
+      try {
+        const { data } = await api.get('/rutas', {
+          params: { origen, destino, fecha }
+        });
         setRutas(Array.isArray(data) ? data : []);
-        setLoading(false);
-      })
-      .catch(() => {
+      } catch (err) {
+        console.error('Error buscando rutas:', err);
         setError(true);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    const init = async () => {
+      if (origen && destino && fecha) {
+        await fetchRutas();
+      } else {
+        setRutas([]);
+        setLoading(false);
+      }
+    };
+
+    init();
   }, [origen, destino, fecha]);
 
   return (
@@ -103,13 +135,13 @@ export default function ResultadosPage() {
       )}
 
       {error && (
-        <Typography color="error" textAlign="center" mt={4}>
+        <Typography color="error" align="center" mt={4}>
           Error al cargar rutas. Intenta de nuevo.
         </Typography>
       )}
 
       {!loading && !error && rutas.length === 0 && (
-        <Typography color="text.secondary" textAlign="center" mt={4}>
+        <Typography color="text.secondary" align="center" mt={4}>
           No hay rutas disponibles para esa búsqueda.
         </Typography>
       )}

@@ -7,7 +7,7 @@ import {
 } from "@mui/material";
 import QRCode from "react-qr-code";
 
-const API = "http://localhost:3000/api";
+const API = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
 function estadoColor(estado) {
   if (estado === "confirmado") return "success";
@@ -23,15 +23,23 @@ export default function HistorialPage() {
   const [error, setError] = useState("");
   const [seleccionado, setSeleccionado] = useState(null);
 
-  useEffect(() => {
-    const clienteId = localStorage.getItem("clienteId");
-    if (!clienteId) { navigate("/"); return; }
-    fetch(`${API}/boletos/cliente/${clienteId}`)
-      .then((r) => r.json())
-      .then((data) => setBoletos(data))
-      .catch(() => setError("No se pudo cargar el historial."))
-      .finally(() => setLoading(false));
-  }, [navigate]);
+useEffect(() => {
+  const usuario = JSON.parse(localStorage.getItem("usuario") || "{}");
+  const token = localStorage.getItem("token");
+  
+  if (!usuario.id || !token) { 
+    navigate("/home"); 
+    return; 
+  }
+  
+  fetch(`${API}/boletos?usuario_id=${usuario.id}`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
+    .then((r) => r.json())
+    .then((data) => setBoletos(data))
+    .catch(() => setError("No se pudo cargar el historial."))
+    .finally(() => setLoading(false));
+}, [navigate]);
 
   const descargarPDF = async (id) => {
     const token = localStorage.getItem("token");
