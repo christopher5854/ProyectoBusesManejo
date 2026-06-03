@@ -25,14 +25,39 @@ import ScannerQR from './pages/bus-personal/ScannerQR';
 
 import './App.css';
 
+const getDefaultRoute = (rol) => {
+  switch (rol) {
+    case 'admin':
+      return '/admin/dashboard';
+    case 'oficinista':
+      return '/oficinista/dashboard';
+    case 'cliente':
+      return '/home';
+    case 'personal_bus':
+      return '/bus/escaneo';
+    default:
+      return '/home';
+  }
+};
+
 function App() {
+  const token = localStorage.getItem('token');
+  const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
+  const isAuthenticated = Boolean(token);
+
   return (
     <div className="App">
       <BrowserRouter>
         <Routes>
           {/* Rutas sin sidebar (públicas) */}
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
+          <Route
+            path="/"
+            element={isAuthenticated ? <Navigate to={getDefaultRoute(usuario?.rol)} replace /> : <Login />}
+          />
+          <Route
+            path="/login"
+            element={isAuthenticated ? <Navigate to={getDefaultRoute(usuario?.rol)} replace /> : <Login />}
+          />
           <Route path="/home" element={<Home />} />
           <Route path="/buscar/resultados" element={<ResultadosPage />} />
           <Route path="/asientos" element={<AsientosPage />} />

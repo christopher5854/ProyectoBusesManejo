@@ -41,8 +41,9 @@ export default function LayoutConSidebar({ rol, children }) {
   const menuItems = menus[rol] || menus.cliente;
 
   const handleLogout = () => {
-    localStorage.clear();
-    navigate("/login");
+    localStorage.removeItem('token');
+    localStorage.removeItem('usuario');
+    navigate('/login', { replace: true });
   };
 
   return (

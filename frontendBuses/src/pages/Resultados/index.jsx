@@ -95,7 +95,7 @@ export default function ResultadosPage() {
   useEffect(() => {
     const fetchRutas = async () => {
       try {
-        const { data } = await api.get('/rutas/buscar', {
+        const { data } = await api.get('/rutas', {
           params: { origen, destino, fecha }
         });
         setRutas(Array.isArray(data) ? data : []);

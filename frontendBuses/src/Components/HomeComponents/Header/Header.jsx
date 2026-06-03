@@ -6,6 +6,13 @@ import './Header.css';
 
 const Header = () => {
   const navigate = useNavigate();
+  const isAuthenticated = Boolean(localStorage.getItem('token'));
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('usuario');
+    navigate('/login', { replace: true });
+  };
 
   return (
     <AppBar position="static" elevation={0} className="header">
@@ -34,20 +41,27 @@ const Header = () => {
         </Box>
 
         <Box className="header__actions">
-          <Button
-            variant="outlined"
-            size="small"
-            className="header__btn-ghost"
-            onClick={() => navigate('/login')}
-          >
-            Iniciar sesión
-          </Button>
+          {!isAuthenticated && (
+            <Button
+              variant="outlined"
+              size="small"
+              className="header__btn-ghost"
+              onClick={() => navigate('/login')}
+            >
+              Iniciar sesión
+            </Button>
+          )}
           <Button variant="contained" size="small" className="header__btn-primary">
             Comprar pasaje
           </Button>
           <Button color="inherit" onClick={() => navigate('/historial')}>
             Mi historial
           </Button>
+          {isAuthenticated && (
+            <Button color="inherit" onClick={handleLogout}>
+              Cerrar sesión
+            </Button>
+          )}
         </Box>
 
       </Toolbar>
