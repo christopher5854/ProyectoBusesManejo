@@ -296,127 +296,63 @@ FROM generate_series(1, 40) n
 ON CONFLICT DO NOTHING;
 
 -- ============================================================
--- FRECUENCIAS (rutas recurrentes con horarios)
+-- FRECUENCIAS: TODAS las combinaciones de ciudades
+-- 15 ciudades × 14 destinos = 210 pares, 2 horarios c/u = 420 frecuencias
 -- ============================================================
+DO $$
+DECLARE
+  v_origen RECORD;
+  v_destino RECORD;
+  v_coop_id INT;
+  v_coop_count INT := 3;
+  v_counter INT := 0;
+  v_precio NUMERIC(8,2);
+  v_hora1 TIME;
+  v_hora2 TIME;
+  v_duracion TEXT;
+  v_res TEXT;
+BEGIN
+  FOR v_origen IN SELECT id, nombre FROM ciudad ORDER BY id
+  LOOP
+    FOR v_destino IN SELECT id, nombre FROM ciudad ORDER BY id
+    LOOP
+      -- Saltar si origen = destino
+      IF v_origen.id = v_destino.id THEN
+        CONTINUE;
+      END IF;
 
--- ── Flota Pelileo (cooperativa 1) ──
--- Ambato → Quito (3 horarios)
-INSERT INTO frecuencia (cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, precio, tipo_viaje, numero_resolucion, duracion_estimada)
-VALUES
-  (1, (SELECT id FROM ciudad WHERE nombre='Ambato'), (SELECT id FROM ciudad WHERE nombre='Quito'),  '06:00', 3.50, 'ordinario', 'RES-001', '3h 00min'),
-  (1, (SELECT id FROM ciudad WHERE nombre='Ambato'), (SELECT id FROM ciudad WHERE nombre='Quito'),  '08:00', 3.50, 'ordinario', 'RES-002', '3h 00min'),
-  (1, (SELECT id FROM ciudad WHERE nombre='Ambato'), (SELECT id FROM ciudad WHERE nombre='Quito'),  '14:00', 3.50, 'ordinario', 'RES-003', '3h 00min');
+      v_counter := v_counter + 1;
 
--- Quito → Ambato (3 horarios)
-INSERT INTO frecuencia (cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, precio, tipo_viaje, numero_resolucion, duracion_estimada)
-VALUES
-  (1, (SELECT id FROM ciudad WHERE nombre='Quito'), (SELECT id FROM ciudad WHERE nombre='Ambato'), '07:00', 3.50, 'ordinario', 'RES-004', '3h 00min'),
-  (1, (SELECT id FROM ciudad WHERE nombre='Quito'), (SELECT id FROM ciudad WHERE nombre='Ambato'), '10:00', 3.50, 'ordinario', 'RES-005', '3h 00min'),
-  (1, (SELECT id FROM ciudad WHERE nombre='Quito'), (SELECT id FROM ciudad WHERE nombre='Ambato'), '16:00', 3.50, 'ordinario', 'RES-006', '3h 00min');
+      -- Asignar cooperativa round-robin (1, 2, 3, 1, 2, 3, ...)
+      v_coop_id := ((v_counter - 1) % v_coop_count) + 1;
 
--- Ambato → Guayaquil
-INSERT INTO frecuencia (cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, precio, tipo_viaje, numero_resolucion, duracion_estimada)
-VALUES
-  (1, (SELECT id FROM ciudad WHERE nombre='Ambato'), (SELECT id FROM ciudad WHERE nombre='Guayaquil'), '09:00', 5.00, 'ordinario', 'RES-007', '5h 00min'),
-  (1, (SELECT id FROM ciudad WHERE nombre='Ambato'), (SELECT id FROM ciudad WHERE nombre='Guayaquil'), '21:00', 5.00, 'ordinario', 'RES-008', '5h 00min');
+      -- Calcular precio basado en diferencia de IDs (simula distancia)
+      v_precio := GREATEST(2.50, ROUND((ABS(v_origen.id - v_destino.id) * 1.80)::numeric, 2));
 
--- Guayaquil → Ambato
-INSERT INTO frecuencia (cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, precio, tipo_viaje, numero_resolucion, duracion_estimada)
-VALUES
-  (1, (SELECT id FROM ciudad WHERE nombre='Guayaquil'), (SELECT id FROM ciudad WHERE nombre='Ambato'), '08:00', 5.00, 'ordinario', 'RES-009', '5h 00min'),
-  (1, (SELECT id FROM ciudad WHERE nombre='Guayaquil'), (SELECT id FROM ciudad WHERE nombre='Ambato'), '20:00', 5.00, 'ordinario', 'RES-010', '5h 00min');
+      -- Generar horarios variados basados en el counter
+      v_hora1 := ('05:00'::TIME + ((v_counter % 7) * INTERVAL '1 hour'));
+      v_hora2 := ('14:00'::TIME + ((v_counter % 6) * INTERVAL '1 hour 30 min'));
 
--- Ambato → Riobamba
-INSERT INTO frecuencia (cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, precio, tipo_viaje, numero_resolucion, duracion_estimada)
-VALUES
-  (1, (SELECT id FROM ciudad WHERE nombre='Ambato'), (SELECT id FROM ciudad WHERE nombre='Riobamba'), '07:30', 1.50, 'ordinario', 'RES-011', '1h 00min'),
-  (1, (SELECT id FROM ciudad WHERE nombre='Ambato'), (SELECT id FROM ciudad WHERE nombre='Riobamba'), '12:00', 1.50, 'ordinario', 'RES-012', '1h 00min');
+      -- Duración estimada
+      v_duracion := (GREATEST(1, ABS(v_origen.id - v_destino.id)))::text || 'h 30min';
 
--- Riobamba → Ambato
-INSERT INTO frecuencia (cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, precio, tipo_viaje, numero_resolucion, duracion_estimada)
-VALUES
-  (1, (SELECT id FROM ciudad WHERE nombre='Riobamba'), (SELECT id FROM ciudad WHERE nombre='Ambato'), '08:00', 1.50, 'ordinario', 'RES-013', '1h 00min'),
-  (1, (SELECT id FROM ciudad WHERE nombre='Riobamba'), (SELECT id FROM ciudad WHERE nombre='Ambato'), '15:00', 1.50, 'ordinario', 'RES-014', '1h 00min');
+      -- Número de resolución
+      v_res := 'RES-' || LPAD(v_counter::text, 4, '0');
 
--- ── Trans Esmeraldas (cooperativa 2) ──
--- Quito → Guayaquil
-INSERT INTO frecuencia (cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, precio, tipo_viaje, numero_resolucion, duracion_estimada)
-VALUES
-  (2, (SELECT id FROM ciudad WHERE nombre='Quito'), (SELECT id FROM ciudad WHERE nombre='Guayaquil'), '06:30', 8.00, 'ordinario', 'RES-015', '8h 00min'),
-  (2, (SELECT id FROM ciudad WHERE nombre='Quito'), (SELECT id FROM ciudad WHERE nombre='Guayaquil'), '22:00', 10.00, 'ejecutivo', 'RES-016', '8h 00min');
+      -- Insertar 2 frecuencias (2 horarios) por par de ciudades
+      INSERT INTO frecuencia (cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, precio, tipo_viaje, numero_resolucion, duracion_estimada, activa)
+      VALUES
+        (v_coop_id, v_origen.id, v_destino.id, v_hora1, v_precio, 'ordinario', v_res || 'A', v_duracion, true);
 
--- Guayaquil → Quito
-INSERT INTO frecuencia (cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, precio, tipo_viaje, numero_resolucion, duracion_estimada)
-VALUES
-  (2, (SELECT id FROM ciudad WHERE nombre='Guayaquil'), (SELECT id FROM ciudad WHERE nombre='Quito'), '07:00', 8.00, 'ordinario', 'RES-017', '8h 00min'),
-  (2, (SELECT id FROM ciudad WHERE nombre='Guayaquil'), (SELECT id FROM ciudad WHERE nombre='Quito'), '23:00', 10.00, 'ejecutivo', 'RES-018', '8h 00min');
+      INSERT INTO frecuencia (cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, precio, tipo_viaje, numero_resolucion, duracion_estimada, activa)
+      VALUES
+        (v_coop_id, v_origen.id, v_destino.id, v_hora2, v_precio, 'ordinario', v_res || 'B', v_duracion, true);
 
--- Quito → Esmeraldas
-INSERT INTO frecuencia (cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, precio, tipo_viaje, numero_resolucion, duracion_estimada)
-VALUES
-  (2, (SELECT id FROM ciudad WHERE nombre='Quito'), (SELECT id FROM ciudad WHERE nombre='Esmeraldas'), '08:00', 7.50, 'ordinario', 'RES-019', '6h 00min'),
-  (2, (SELECT id FROM ciudad WHERE nombre='Quito'), (SELECT id FROM ciudad WHERE nombre='Esmeraldas'), '21:30', 7.50, 'ordinario', 'RES-020', '6h 00min');
+    END LOOP;
+  END LOOP;
 
--- Esmeraldas → Quito
-INSERT INTO frecuencia (cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, precio, tipo_viaje, numero_resolucion, duracion_estimada)
-VALUES
-  (2, (SELECT id FROM ciudad WHERE nombre='Esmeraldas'), (SELECT id FROM ciudad WHERE nombre='Quito'), '06:00', 7.50, 'ordinario', 'RES-021', '6h 00min'),
-  (2, (SELECT id FROM ciudad WHERE nombre='Esmeraldas'), (SELECT id FROM ciudad WHERE nombre='Quito'), '18:00', 7.50, 'ordinario', 'RES-022', '6h 00min');
-
--- Guayaquil → Cuenca
-INSERT INTO frecuencia (cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, precio, tipo_viaje, numero_resolucion, duracion_estimada)
-VALUES
-  (2, (SELECT id FROM ciudad WHERE nombre='Guayaquil'), (SELECT id FROM ciudad WHERE nombre='Cuenca'), '09:00', 8.50, 'ordinario', 'RES-023', '4h 00min'),
-  (2, (SELECT id FROM ciudad WHERE nombre='Guayaquil'), (SELECT id FROM ciudad WHERE nombre='Cuenca'), '15:00', 8.50, 'ordinario', 'RES-024', '4h 00min');
-
--- Cuenca → Guayaquil
-INSERT INTO frecuencia (cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, precio, tipo_viaje, numero_resolucion, duracion_estimada)
-VALUES
-  (2, (SELECT id FROM ciudad WHERE nombre='Cuenca'), (SELECT id FROM ciudad WHERE nombre='Guayaquil'), '07:00', 8.50, 'ordinario', 'RES-025', '4h 00min'),
-  (2, (SELECT id FROM ciudad WHERE nombre='Cuenca'), (SELECT id FROM ciudad WHERE nombre='Guayaquil'), '14:00', 8.50, 'ordinario', 'RES-026', '4h 00min');
-
--- ── Transportes Baños (cooperativa 3) ──
--- Ambato → Cuenca
-INSERT INTO frecuencia (cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, precio, tipo_viaje, numero_resolucion, duracion_estimada)
-VALUES
-  (3, (SELECT id FROM ciudad WHERE nombre='Ambato'), (SELECT id FROM ciudad WHERE nombre='Cuenca'), '07:00', 6.00, 'ordinario', 'RES-027', '6h 00min'),
-  (3, (SELECT id FROM ciudad WHERE nombre='Ambato'), (SELECT id FROM ciudad WHERE nombre='Cuenca'), '20:00', 6.00, 'ordinario', 'RES-028', '6h 00min');
-
--- Cuenca → Ambato
-INSERT INTO frecuencia (cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, precio, tipo_viaje, numero_resolucion, duracion_estimada)
-VALUES
-  (3, (SELECT id FROM ciudad WHERE nombre='Cuenca'), (SELECT id FROM ciudad WHERE nombre='Ambato'), '06:00', 6.00, 'ordinario', 'RES-029', '6h 00min'),
-  (3, (SELECT id FROM ciudad WHERE nombre='Cuenca'), (SELECT id FROM ciudad WHERE nombre='Ambato'), '18:00', 6.00, 'ordinario', 'RES-030', '6h 00min');
-
--- Quito → Cuenca
-INSERT INTO frecuencia (cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, precio, tipo_viaje, numero_resolucion, duracion_estimada)
-VALUES
-  (3, (SELECT id FROM ciudad WHERE nombre='Quito'), (SELECT id FROM ciudad WHERE nombre='Cuenca'), '22:00', 12.00, 'ejecutivo', 'RES-031', '10h 00min');
-
--- Cuenca → Quito
-INSERT INTO frecuencia (cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, precio, tipo_viaje, numero_resolucion, duracion_estimada)
-VALUES
-  (3, (SELECT id FROM ciudad WHERE nombre='Cuenca'), (SELECT id FROM ciudad WHERE nombre='Quito'), '21:00', 12.00, 'ejecutivo', 'RES-032', '10h 00min');
-
--- Quito → Loja
-INSERT INTO frecuencia (cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, precio, tipo_viaje, numero_resolucion, duracion_estimada)
-VALUES
-  (3, (SELECT id FROM ciudad WHERE nombre='Quito'), (SELECT id FROM ciudad WHERE nombre='Loja'), '20:00', 15.00, 'ordinario', 'RES-033', '14h 00min');
-
--- Loja → Quito
-INSERT INTO frecuencia (cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, precio, tipo_viaje, numero_resolucion, duracion_estimada)
-VALUES
-  (3, (SELECT id FROM ciudad WHERE nombre='Loja'), (SELECT id FROM ciudad WHERE nombre='Quito'), '19:00', 15.00, 'ordinario', 'RES-034', '14h 00min');
-
--- Quito → Ibarra
-INSERT INTO frecuencia (cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, precio, tipo_viaje, numero_resolucion, duracion_estimada)
-VALUES
-  (3, (SELECT id FROM ciudad WHERE nombre='Quito'), (SELECT id FROM ciudad WHERE nombre='Ibarra'), '09:00', 3.00, 'ordinario', 'RES-035', '2h 30min');
-
--- Ibarra → Quito
-INSERT INTO frecuencia (cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, precio, tipo_viaje, numero_resolucion, duracion_estimada)
-VALUES
-  (3, (SELECT id FROM ciudad WHERE nombre='Ibarra'), (SELECT id FROM ciudad WHERE nombre='Quito'), '10:00', 3.00, 'ordinario', 'RES-036', '2h 30min');
+  RAISE NOTICE 'Se crearon % pares de rutas (% frecuencias totales)', v_counter, v_counter * 2;
+END $$;
 
 -- ============================================================
 -- HOJAS DE RUTA (asignar un bus a cada frecuencia)
