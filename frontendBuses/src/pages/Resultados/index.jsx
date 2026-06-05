@@ -55,6 +55,10 @@ function BusCard({ ruta, pasajeros }) {
             <Typography variant="body2" color="text.secondary">
               {ruta.asientos_disponibles ?? "N/D"} asientos disponibles
             </Typography>
+
+            <Typography variant="h5" fontWeight="bold" color="primary">
+              ${Number(ruta.precio || 0).toFixed(2)}
+            </Typography>
           </Box>
           <Chip
             label={ruta.tipo_asiento || "Normal"}
@@ -92,32 +96,33 @@ export default function ResultadosPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  useEffect(() => {
-    const fetchRutas = async () => {
-      try {
-        const { data } = await api.get('/rutas', {
-          params: { origen, destino, fecha }
-        });
-        setRutas(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error('Error buscando rutas:', err);
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
-    };
+useEffect(() => {
+  const fetchRutas = async () => {
+    try {
+  
+      const { data } = await api.get('/rutas/buscar', {
+        params: { origen, destino, fecha }
+      });
+      setRutas(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Error buscando rutas:', err);
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const init = async () => {
-      if (origen && destino && fecha) {
-        await fetchRutas();
-      } else {
-        setRutas([]);
-        setLoading(false);
-      }
-    };
+  const init = async () => {
+    if (origen && destino && fecha) {
+      await fetchRutas();
+    } else {
+      setRutas([]);
+      setLoading(false);
+    }
+  };
 
-    init();
-  }, [origen, destino, fecha]);
+  init();
+}, [origen, destino, fecha]);
 
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>

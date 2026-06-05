@@ -14,6 +14,7 @@ const Header = () => {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('usuario');
+    localStorage.removeItem('compraEnProceso');
     resetUsuario();
     navigate('/login', { replace: true });
   };
@@ -45,7 +46,8 @@ const Header = () => {
         </Box>
 
         <Box className="header__actions">
-          {!isAuthenticated && (
+          {!isAuthenticated ? (
+            // No autenticado - solo mostrar botón de login
             <Button
               variant="outlined"
               size="small"
@@ -54,17 +56,19 @@ const Header = () => {
             >
               Iniciar sesión
             </Button>
-          )}
-          <Button variant="contained" size="small" className="header__btn-primary">
-            Comprar pasaje
-          </Button>
-          <Button color="inherit" onClick={() => navigate('/historial')}>
-            Mi historial
-          </Button>
-          {isAuthenticated && (
-            <Button color="inherit" onClick={handleLogout}>
-              Cerrar sesión
-            </Button>
+          ) : (
+            // Autenticado - mostrar todos los botones
+            <>
+              <Button variant="contained" size="small" className="header__btn-primary" onClick={() => navigate('/')}>
+                Comprar pasaje
+              </Button>
+              <Button color="inherit" onClick={() => navigate('/historial')}>
+                Mi historial
+              </Button>
+              <Button color="inherit" onClick={handleLogout}>
+                Cerrar sesión
+              </Button>
+            </>
           )}
         </Box>
 

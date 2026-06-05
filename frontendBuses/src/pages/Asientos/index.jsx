@@ -90,6 +90,8 @@ export default function AsientosPage() {
         const { data } = await api.get(`/buses/${rutaId}/asientos`);
         const lista = Array.isArray(data) ? data.slice(0, MAX_ASIENTOS) : [];
         setAsientos(lista);
+        // 🔧 Limpiar selección anterior al cargar una nueva ruta
+        setSeleccionados([]);
       } catch (err) {
         console.error("Error cargando asientos:", err);
       } finally {
