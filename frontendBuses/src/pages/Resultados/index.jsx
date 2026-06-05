@@ -12,26 +12,26 @@ import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 function BusCard({ ruta, pasajeros }) {
   const navigate = useNavigate();
 
-    const handleSeleccionar = () => {
-      // Limpiar selección anterior
-      localStorage.removeItem("asientosSeleccionados");
-      localStorage.removeItem("compraEnProceso");
-      
-      localStorage.setItem('rutaId', ruta.id);
-      localStorage.setItem('rutaSeleccionada', JSON.stringify({
-        id: ruta.id,
-        origen: ruta.origen,
-        destino: ruta.destino,
-        fecha: ruta.fecha_ruta,
-        hora_salida: ruta.hora_salida,
-        precio: ruta.precio,
-        ciudadOrigenId: ruta.ciudad_origen_id,
-        ciudadDestinoId: ruta.ciudad_destino_id,
-        cooperativa: ruta.cooperativa,
-        placa: ruta.placa,
-      }));
-      navigate(`/asientos?rutaId=${ruta.id}&pasajeros=${pasajeros}`);
-    };
+  const handleSeleccionar = () => {
+    // Limpiar selección anterior
+    localStorage.removeItem("asientosSeleccionados");
+    localStorage.removeItem("compraEnProceso");
+    
+    localStorage.setItem('rutaId', ruta.id);
+    localStorage.setItem('rutaSeleccionada', JSON.stringify({
+      id: ruta.id,
+      origen: ruta.origen,
+      destino: ruta.destino,
+      fecha: ruta.fecha_ruta,
+      hora_salida: ruta.hora_salida,
+      precio: ruta.precio,
+      ciudadOrigenId: ruta.ciudad_origen_id,
+      ciudadDestinoId: ruta.ciudad_destino_id,
+      cooperativa: ruta.cooperativa,
+      placa: ruta.placa,
+    }));
+    navigate(`/asientos?rutaId=${ruta.id}&pasajeros=${pasajeros}`);
+  };
 
   return (
     <Card sx={{ display: "flex", mb: 2, borderRadius: 3, boxShadow: 2, "&:hover": { boxShadow: 5 } }}>

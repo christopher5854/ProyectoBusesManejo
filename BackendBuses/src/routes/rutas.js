@@ -34,18 +34,14 @@ router.get('/buscar', async (req, res) => {
     return res.status(400).json({ message: 'Faltan parámetros de búsqueda' });
   }
 
-  // SOLO USAR queryHojaRuta (la que funciona)
   const query = `
     SELECT
       r.id,
       ci.nombre as origen,
       cd.nombre as destino,
-      fr.ciudad_origen_id,
-      fr.ciudad_destino_id,
       fr.hora_salida,
       fr.precio,
       r.fecha_ruta,
-      r.estado,
       b.placa,
       b.capacidad_total,
       co.nombre as cooperativa,
@@ -57,13 +53,14 @@ router.get('/buscar', async (req, res) => {
     JOIN ciudad ci ON fr.ciudad_origen_id = ci.id
     JOIN ciudad cd ON fr.ciudad_destino_id = cd.id
     JOIN cooperativa co ON hr.cooperativa_id = co.id
-    LEFT JOIN boleto bo ON bo.ruta_id = r.id AND bo.estado_pago != 'cancelado'
+    LEFT JOIN boleto bo ON bo.ruta_id = r.id 
+      AND bo.estado_pago IN ('pendiente', 'pagado', 'validado')
     WHERE ci.nombre = $1
       AND cd.nombre = $2
       AND r.fecha_ruta = $3
       AND r.estado = 'programada'
-    GROUP BY r.id, ci.nombre, cd.nombre, fr.ciudad_origen_id, fr.ciudad_destino_id, 
-             fr.hora_salida, fr.precio, r.fecha_ruta, r.estado, b.placa, b.capacidad_total, co.nombre
+    GROUP BY r.id, ci.nombre, cd.nombre, fr.hora_salida, fr.precio, 
+             r.fecha_ruta, b.placa, b.capacidad_total, co.nombre
     ORDER BY fr.hora_salida
   `;
 

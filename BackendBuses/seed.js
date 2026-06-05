@@ -111,68 +111,126 @@ async function seed() {
     }
     console.log('✅ Usuarios de ejemplo insertados');
 
-    // ─── Buses ───────────────────────────────────────────────────
-    // Obtener el id de la cooperativa recién insertada (o existente)
-    const coopRes = await client.query(`SELECT id FROM cooperativa WHERE ruc = '1891234560001'`);
-    const cooperativaId = coopRes.rows[0].id;
-    await client.query(
-      `INSERT INTO bus (cooperativa_id, numero_interno, placa, marca_chasis, marca_carroceria, anio_fabricacion, capacidad_total, activo)
-       VALUES ($1, 'BUS-001', 'ABC1234', 'Volvo', 'Zhong Tong', 2020, 50, true)
-       ON CONFLICT (placa) DO NOTHING`,
-      [cooperativaId]
-    );
-    console.log('✅ Buses insertados');
+// ─── Buses ───────────────────────────────────────────────────
+const coopRes = await client.query(`SELECT id FROM cooperativa WHERE ruc = '1891234560001'`);
+const cooperativaId = coopRes.rows[0].id;
 
-    // ─── Frecuencia Quito → Ambato ───────────────────────────────
-    // Obtener IDs de ciudades (suponiendo que ya fueron insertadas)
+const buses = [
+  { numero_interno: 'BUS-001', placa: 'ABC1234', marca_chasis: 'Volvo', marca_carroceria: 'Zhong Tong', anio: 2020, capacidad: 50 },
+  { numero_interno: 'BUS-002', placa: 'XYZ5678', marca_chasis: 'Mercedes', marca_carroceria: 'Busscar', anio: 2021, capacidad: 45 },
+  { numero_interno: 'BUS-003', placa: 'DEF9012', marca_chasis: 'Scania', marca_carroceria: 'Marcopolo', anio: 2022, capacidad: 52 },
+  { numero_interno: 'BUS-004', placa: 'GHI3456', marca_chasis: 'Volvo', marca_carroceria: 'Irizar', anio: 2023, capacidad: 48 },
+  { numero_interno: 'BUS-005', placa: 'JKL7890', marca_chasis: 'Mercedes', marca_carroceria: 'Zhong Tong', anio: 2020, capacidad: 50 },
+];
+
+for (const bus of buses) {
+  await client.query(
+    `INSERT INTO bus (cooperativa_id, numero_interno, placa, marca_chasis, marca_carroceria, anio_fabricacion, capacidad_total, activo)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, true)
+     ON CONFLICT (placa) DO NOTHING`,
+    [cooperativaId, bus.numero_interno, bus.placa, bus.marca_chasis, bus.marca_carroceria, bus.anio, bus.capacidad]
+  );
+}
+console.log('✅ Buses insertados');
+
+// ─── Asientos para cada bus ──────────────────────────────────
+const tiposAsientoDB = await client.query(`SELECT id FROM tipo_asiento`);
+const tipoNormalId = tiposAsientoDB.rows[0]?.id;
+
+const busesDB = await client.query(`SELECT id, capacidad_total FROM bus`);
+
+for (const bus of busesDB.rows) {
+  // Verificar si ya tiene asientos
+  const asientosExistentes = await client.query(`SELECT COUNT(*) FROM asiento WHERE bus_id = $1`, [bus.id]);
+  if (parseInt(asientosExistentes.rows[0].count) === 0) {
+    for (let i = 1; i <= bus.capacidad_total; i++) {
+      const piso = i <= 25 ? 1 : 2;
+      await client.query(
+        `INSERT INTO asiento (bus_id, numero, piso, disponible, tipo_asiento_id)
+         VALUES ($1, $2, $3, true, $4)`,
+        [bus.id, i, piso, tipoNormalId]
+      );
+    }
+    console.log(`✅ Asientos creados para bus ${bus.id} (${bus.capacidad_total} asientos)`);
+  }
+}
+
+    // ─── Obtener IDs de ciudades (UNA SOLA VEZ) ─────────────────
     const quitoRes = await client.query(`SELECT id FROM ciudad WHERE nombre = 'Quito'`);
     const ambatoRes = await client.query(`SELECT id FROM ciudad WHERE nombre = 'Ambato'`);
+    const guayaquilRes = await client.query(`SELECT id FROM ciudad WHERE nombre = 'Guayaquil'`);
+    const cuencaRes = await client.query(`SELECT id FROM ciudad WHERE nombre = 'Cuenca'`);
+
     const quitoId = quitoRes.rows[0].id;
     const ambatoId = ambatoRes.rows[0].id;
+    const guayaquilId = guayaquilRes.rows[0].id;
+    const cuencaId = cuencaRes.rows[0].id;
 
+    // ─── Frecuencias (todas las rutas) ──────────────────────────
+    const frecuencias = [
+      // Quito ↔ Ambato
+      { origen: quitoId, destino: ambatoId, hora: '08:00:00', duracion: '02:30:00', resolucion: 'RES-QUITO-AMBATO-1', precio: 12.50 },
+      { origen: ambatoId, destino: quitoId, hora: '11:00:00', duracion: '02:20:00', resolucion: 'RES-AMBATO-QUITO-1', precio: 12.50 },
+      
+      // Quito ↔ Guayaquil
+      { origen: quitoId, destino: guayaquilId, hora: '07:00:00', duracion: '08:00:00', resolucion: 'RES-QUITO-GUAYAQUIL-1', precio: 18.00 },
+      { origen: quitoId, destino: guayaquilId, hora: '13:00:00', duracion: '08:00:00', resolucion: 'RES-QUITO-GUAYAQUIL-2', precio: 18.00 },
+      { origen: quitoId, destino: guayaquilId, hora: '22:00:00', duracion: '08:00:00', resolucion: 'RES-QUITO-GUAYAQUIL-3', precio: 18.00 },
+      { origen: guayaquilId, destino: quitoId, hora: '07:00:00', duracion: '08:00:00', resolucion: 'RES-GUAYAQUIL-QUITO-1', precio: 18.00 },
+      { origen: guayaquilId, destino: quitoId, hora: '13:00:00', duracion: '08:00:00', resolucion: 'RES-GUAYAQUIL-QUITO-2', precio: 18.00 },
+      { origen: guayaquilId, destino: quitoId, hora: '22:00:00', duracion: '08:00:00', resolucion: 'RES-GUAYAQUIL-QUITO-3', precio: 18.00 },
+      
+      // Quito ↔ Cuenca
+      { origen: quitoId, destino: cuencaId, hora: '08:00:00', duracion: '10:00:00', resolucion: 'RES-QUITO-CUENCA-1', precio: 20.00 },
+      { origen: quitoId, destino: cuencaId, hora: '15:00:00', duracion: '10:00:00', resolucion: 'RES-QUITO-CUENCA-2', precio: 20.00 },
+      { origen: cuencaId, destino: quitoId, hora: '08:00:00', duracion: '10:00:00', resolucion: 'RES-CUENCA-QUITO-1', precio: 20.00 },
+      { origen: cuencaId, destino: quitoId, hora: '15:00:00', duracion: '10:00:00', resolucion: 'RES-CUENCA-QUITO-2', precio: 20.00 },
+      
+      // Guayaquil ↔ Cuenca
+      { origen: guayaquilId, destino: cuencaId, hora: '06:30:00', duracion: '04:00:00', resolucion: 'RES-GUAYAQUIL-CUENCA-1', precio: 12.00 },
+      { origen: guayaquilId, destino: cuencaId, hora: '14:30:00', duracion: '04:00:00', resolucion: 'RES-GUAYAQUIL-CUENCA-2', precio: 12.00 },
+      { origen: cuencaId, destino: guayaquilId, hora: '06:30:00', duracion: '04:00:00', resolucion: 'RES-CUENCA-GUAYAQUIL-1', precio: 12.00 },
+      { origen: cuencaId, destino: guayaquilId, hora: '14:30:00', duracion: '04:00:00', resolucion: 'RES-CUENCA-GUAYAQUIL-2', precio: 12.00 },
+    ];
+
+for (const f of frecuencias) {
+  const exists = await client.query(
+    `SELECT id FROM frecuencia WHERE numero_resolucion = $1`,
+    [f.resolucion]
+  );
+  if (exists.rows.length === 0) {
     await client.query(
       `INSERT INTO frecuencia (cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, duracion_estimada, numero_resolucion, precio, activa, tipo_viaje)
-       VALUES ($1, $2, $3, '08:00:00', '02:30:00', 'RES-QUITO-AMBATO', 12.50, true, 'directo')
-       ON CONFLICT DO NOTHING`,
-      [cooperativaId, quitoId, ambatoId]
+       VALUES ($1, $2, $3, $4, $5, $6, $7, true, 'directo')`,
+      [cooperativaId, f.origen, f.destino, f.hora, f.duracion, f.resolucion, f.precio]
     );
-    await client.query(
-      `INSERT INTO frecuencia (cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, duracion_estimada, numero_resolucion, precio, activa, tipo_viaje)
-       VALUES ($1, $2, $3, '11:00:00', '02:20:00', 'RES-AMBATO-QUITO', 12.50, true, 'directo')
-       ON CONFLICT DO NOTHING`,
-      [cooperativaId, ambatoId, quitoId]
-    );
-    console.log('✅ Frecuencias Quito ↔ Ambato insertadas');
+  }
+}
+    console.log('✅ Frecuencias insertadas');
 
-    // ─── Hojas de ruta para ambas frecuencias Quito ↔ Ambato ─────
-    const freqRes1 = await client.query(`SELECT id FROM frecuencia WHERE ciudad_origen_id = $1 AND ciudad_destino_id = $2`, [quitoId, ambatoId]);
-    const frecuenciaId1 = freqRes1.rows[0].id;
-    const freqRes2 = await client.query(`SELECT id FROM frecuencia WHERE ciudad_origen_id = $1 AND ciudad_destino_id = $2`, [ambatoId, quitoId]);
-    const frecuenciaId2 = freqRes2.rows[0].id;
-    const busRes = await client.query(`SELECT id FROM bus WHERE placa = 'ABC1234'`);
-    const busId = busRes.rows[0].id;
+// ─── Obtener IDs de frecuencias y TODOS los buses ─────────────────
+const frecuenciasDB = await client.query(`SELECT id FROM frecuencia`);
+const busesDBasignar = await client.query(`SELECT id FROM bus`);
 
-    await client.query(
-      `INSERT INTO hoja_ruta (cooperativa_id, frecuencia_id, bus_id, fecha_inicio, fecha_fin, generacion, activa)
-       VALUES ($1, $2, $3, '2026-05-01', '2026-12-31', 'manual', true)
-       ON CONFLICT DO NOTHING`,
-      [cooperativaId, frecuenciaId1, busId]
-    );
-    await client.query(
-      `INSERT INTO hoja_ruta (cooperativa_id, frecuencia_id, bus_id, fecha_inicio, fecha_fin, generacion, activa)
-       VALUES ($1, $2, $3, '2026-05-01', '2026-12-31', 'manual', true)
-       ON CONFLICT DO NOTHING`,
-      [cooperativaId, frecuenciaId2, busId]
-    );
-    console.log('✅ Hojas de ruta insertadas');
+// ─── Hojas de ruta para cada frecuencia usando diferentes buses ───
+let busIndex = 0;
+for (const freq of frecuenciasDB.rows) {
+  // Rotar entre los buses disponibles
+  const busId = busesDBasignar.rows[busIndex % busesDBasignar.rows.length].id;
+  await client.query(
+    `INSERT INTO hoja_ruta (cooperativa_id, frecuencia_id, bus_id, fecha_inicio, fecha_fin, generacion, activa)
+     VALUES ($1, $2, $3, '2026-05-01', '2026-12-31', 'manual', true)
+     ON CONFLICT DO NOTHING`,
+    [cooperativaId, freq.id, busId]
+  );
+  busIndex++;
+}
+console.log('✅ Hojas de ruta insertadas con diferentes buses');
 
-    // ─── Rutas diarias para ambos sentidos ───────────────────────
-    const hojaRutaRes1 = await client.query(`SELECT id FROM hoja_ruta WHERE frecuencia_id = $1`, [frecuenciaId1]);
-    const hojaRutaRes2 = await client.query(`SELECT id FROM hoja_ruta WHERE frecuencia_id = $1`, [frecuenciaId2]);
-    const hojaRutaId1 = hojaRutaRes1.rows[0]?.id;
-    const hojaRutaId2 = hojaRutaRes2.rows[0]?.id;
-
-    for (const [frecuenciaId, hojaRutaId] of [[frecuenciaId1, hojaRutaId1], [frecuenciaId2, hojaRutaId2]]) {
+    // ─── Rutas diarias para los próximos 10 días ─────────────────
+    const hojasRuta = await client.query(`SELECT id, frecuencia_id FROM hoja_ruta`);
+    
+    for (const hoja of hojasRuta.rows) {
       for (let i = 0; i < 10; i++) {
         const fecha = new Date('2026-05-20');
         fecha.setDate(fecha.getDate() + i);
@@ -183,11 +241,10 @@ async function seed() {
            WHERE NOT EXISTS (
              SELECT 1 FROM ruta WHERE frecuencia_id = $1 AND hoja_ruta_id = $2 AND fecha_ruta = $3
            )`,
-          [frecuenciaId, hojaRutaId, fechaStr]
+          [hoja.frecuencia_id, hoja.id, fechaStr]
         );
       }
     }
-    console.log('✅ Rutas diarias insertadas');
     console.log('✅ Rutas diarias insertadas');
 
     await client.query('COMMIT');
