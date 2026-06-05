@@ -82,7 +82,7 @@ const Login = () => {
           <Typography className="login__logo-sub">Cooperativa de transporte</Typography>
         </Box>
 
-        <Typography className="login__title">Iniciar sesion</Typography>
+        <Typography className="login__title">Iniciar sesión</Typography>
         <Typography className="login__subtitle">
           Ingresa tus credenciales para continuar
         </Typography>
@@ -93,7 +93,7 @@ const Login = () => {
 
         <Box className="login__form">
           <Box className="login__field">
-            <Typography className="login__label">Correo electronico</Typography>
+            <Typography className="login__label">Correo electrónico</Typography>
             <TextField
               name="email"
               type="email"
@@ -108,7 +108,7 @@ const Login = () => {
           </Box>
 
           <Box className="login__field">
-            <Typography className="login__label">Contrasena</Typography>
+            <Typography className="login__label">Contraseña</Typography>
             <TextField
               name="password"
               type="password"
