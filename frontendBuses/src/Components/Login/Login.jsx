@@ -103,6 +103,7 @@ const Login = () => {
               value={form.email}
               onChange={handleChange}
               className="login__input"
+              autoComplete="off"
             />
           </Box>
 
@@ -117,6 +118,7 @@ const Login = () => {
               value={form.password}
               onChange={handleChange}
               className="login__input"
+              autoComplete="new-password"
             />
           </Box>
 
