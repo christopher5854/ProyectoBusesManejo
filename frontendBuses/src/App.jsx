@@ -2,6 +2,7 @@ import { useContext } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
+import Register from './pages/Register';
 import LayoutConSidebar from './layouts/LayoutConSidebar';
 import ResultadosPage from './pages/Resultados';
 import AsientosPage from './pages/Asientos';
@@ -64,6 +65,10 @@ function App() {
           <Route
             path="/login"
             element={isAuthenticated ? <Navigate to={getDefaultRoute(currentUsuario?.rol)} replace /> : <Login />}
+          />
+          <Route
+            path="/register"
+            element={isAuthenticated ? <Navigate to={getDefaultRoute(currentUsuario?.rol)} replace /> : <Register />}
           />
           <Route
             path="/home"
