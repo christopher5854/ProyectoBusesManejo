@@ -13,6 +13,10 @@ function BusCard({ ruta, pasajeros }) {
   const navigate = useNavigate();
 
   const handleSeleccionar = () => {
+    // Limpiar selección anterior
+    localStorage.removeItem("asientosSeleccionados");
+    localStorage.removeItem("compraEnProceso");
+    
     localStorage.setItem('rutaId', ruta.id);
     localStorage.setItem('rutaSeleccionada', JSON.stringify({
       id: ruta.id,
@@ -95,7 +99,7 @@ export default function ResultadosPage() {
   useEffect(() => {
     const fetchRutas = async () => {
       try {
-        const { data } = await api.get('/rutas', {
+        const { data } = await api.get('/rutas/buscar', {
           params: { origen, destino, fecha }
         });
         setRutas(Array.isArray(data) ? data : []);

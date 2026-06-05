@@ -18,7 +18,7 @@ const listarRutas = async (req, res) => {
       JOIN ciudad c1 ON f.ciudad_origen_id = c1.id
       JOIN ciudad c2 ON f.ciudad_destino_id = c2.id
     ) f ON r.frecuencia_id = f.id
-    LEFT JOIN boleto bo ON bo.ruta_id = r.id AND bo.estado_boleto != 'cancelado'
+    LEFT JOIN boleto bo ON bo.ruta_id = r.id AND bo.estado_pago != 'cancelado'
     WHERE 1=1
   `;
   const values = [];
@@ -57,7 +57,7 @@ const detalleRuta = async (req, res) => {
     `, [id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Ruta no encontrada' });
     const ruta = result.rows[0];
-    const ocupados = await pool.query(`SELECT COUNT(*) FROM boleto WHERE ruta_id = $1 AND estado_boleto != 'cancelado'`, [id]);
+    const ocupados = await pool.query(`SELECT COUNT(*) FROM boleto WHERE ruta_id = $1 AND estado_pago != 'cancelado'`, [id]);
     ruta.asientos_ocupados = parseInt(ocupados.rows[0].count);
     ruta.asientos_disponibles = ruta.capacidad_total - ruta.asientos_ocupados;
     res.json(ruta);

@@ -10,6 +10,7 @@ import {
   Schedule, Payment, QrCodeScanner, Logout, ConfirmationNumber, EventNote
 } from "@mui/icons-material";
 import { UserContext } from "../Context/UserContext";
+import { useAuthStore } from "../store/authStore";
 
 const drawerWidth = 260;
 
@@ -46,6 +47,7 @@ export default function LayoutConSidebar({ rol, children }) {
     localStorage.removeItem('token');
     localStorage.removeItem('usuario');
     resetUsuario();
+    useAuthStore.getState().logout();
     navigate('/login', { replace: true });
   };
 

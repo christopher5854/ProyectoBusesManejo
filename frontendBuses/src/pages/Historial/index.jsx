@@ -5,12 +5,11 @@ import {
   CardActionArea, Chip, CircularProgress, Alert,
   Modal, Divider, Button
 } from "@mui/material";
-import QRCode from "react-qr-code";
-
-const API = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
+//import QRCode from "react-qr-code";
+import api from "../../services/api";
 
 function estadoColor(estado) {
-  if (estado === "confirmado") return "success";
+  if (estado === "pagado" || estado === "confirmado") return "success";
   if (estado === "pendiente") return "warning";
   if (estado === "cancelado") return "error";
   return "default";
@@ -23,35 +22,48 @@ export default function HistorialPage() {
   const [error, setError] = useState("");
   const [seleccionado, setSeleccionado] = useState(null);
 
-useEffect(() => {
-  const usuario = JSON.parse(localStorage.getItem("usuario") || "{}");
-  const token = localStorage.getItem("token");
-  
-  if (!usuario.id || !token) { 
-    navigate("/home"); 
-    return; 
-  }
-  
-  fetch(`${API}/boletos?usuario_id=${usuario.id}`, {
-    headers: { 'Authorization': `Bearer ${token}` }
-  })
-    .then((r) => r.json())
-    .then((data) => setBoletos(data))
-    .catch(() => setError("No se pudo cargar el historial."))
-    .finally(() => setLoading(false));
-}, [navigate]);
-
-  const descargarPDF = async (id) => {
+  useEffect(() => {
     const token = localStorage.getItem("token");
-    const response = await fetch(`${API}/boletos/${id}/pdf`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `boleto-${id}.pdf`;
-    a.click();
+    const usuario = JSON.parse(localStorage.getItem("usuario") || "{}");
+    
+    if (!token || !usuario.id) {
+      navigate("/login");
+      return;
+    }
+
+    const fetchBoletos = async () => {
+      try {
+        const response = await api.get(`/boletos?usuario_id=${usuario.id}`);
+        setBoletos(response.data);
+      } catch (error) {
+        console.error("Error:", error);
+        setError("No se pudo cargar el historial. " + (error.response?.data?.message || ""));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBoletos();
+  }, [navigate]);
+
+  const descargarPDF = async (id, codigo) => {
+    try {
+      const response = await api.get(`/boletos/${id}/pdf`, {
+        responseType: 'blob'
+      });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `boleto_${codigo || id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error descargando PDF:", error);
+      setError("Error al descargar el PDF");
+    }
   };
 
   if (loading) return (
@@ -68,6 +80,12 @@ useEffect(() => {
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
+      {boletos.length === 0 && !error && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          No tienes boletos comprados aún.
+        </Alert>
+      )}
+
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
         {boletos.map((boleto) => (
           <Card key={boleto.id} variant="outlined" sx={{ borderRadius: 3 }}>
@@ -75,15 +93,19 @@ useEffect(() => {
               <CardContent>
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
                   <Typography fontWeight="bold" fontSize={15}>
-                    {boleto.origen} → {boleto.destino}
+                    {boleto.origen || "Origen"} → {boleto.destino || "Destino"}
                   </Typography>
-                  <Chip label={boleto.estado} color={estadoColor(boleto.estado)} size="small" />
+                  <Chip 
+                    label={boleto.estado_pago || boleto.estado || "pendiente"} 
+                    color={estadoColor(boleto.estado_pago || boleto.estado)} 
+                    size="small" 
+                  />
                 </Box>
                 <Typography variant="body2" color="text.secondary">
-                  {boleto.fecha} · {boleto.hora_salida}
+                  {boleto.fecha_viaje || boleto.fecha} · {boleto.hora_salida || "Hora no disponible"}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Asiento {boleto.asiento} · {boleto.cooperativa}
+                  Asiento {boleto.numero_asiento || boleto.asiento} · {boleto.cooperativa || "Cooperativa"}
                 </Typography>
                 <Typography variant="body2" fontWeight="bold" color="primary" mt={1}>
                   Código: {boleto.codigo}
@@ -104,23 +126,30 @@ useEffect(() => {
           {seleccionado && (
             <>
               <Typography variant="h6" fontWeight="bold" mb={1}>
-                {seleccionado.origen} → {seleccionado.destino}
+                {seleccionado.origen || "Origen"} → {seleccionado.destino || "Destino"}
               </Typography>
               <Divider sx={{ mb: 2 }} />
               <Box sx={{ display: "flex", flexDirection: "column", gap: 0.8, mb: 3 }}>
-                <Typography variant="body2"><b>Fecha:</b> {seleccionado.fecha}</Typography>
-                <Typography variant="body2"><b>Hora:</b> {seleccionado.hora_salida}</Typography>
-                <Typography variant="body2"><b>Cooperativa:</b> {seleccionado.cooperativa}</Typography>
-                <Typography variant="body2"><b>Asiento:</b> {seleccionado.asiento}</Typography>
-                <Typography variant="body2"><b>Pasajero:</b> {seleccionado.nombre}</Typography>
+                <Typography variant="body2"><b>Fecha:</b> {seleccionado.fecha_viaje || seleccionado.fecha}</Typography>
+                <Typography variant="body2"><b>Hora:</b> {seleccionado.hora_salida || "N/A"}</Typography>
+                <Typography variant="body2"><b>Cooperativa:</b> {seleccionado.cooperativa || "N/A"}</Typography>
+                <Typography variant="body2"><b>Asiento:</b> {seleccionado.numero_asiento || seleccionado.asiento}</Typography>
+                <Typography variant="body2"><b>Pasajero:</b> {seleccionado.nombre || seleccionado.nombres}</Typography>
                 <Typography variant="body2"><b>Código:</b> {seleccionado.codigo}</Typography>
-                <Chip label={seleccionado.estado} color={estadoColor(seleccionado.estado)} size="small" sx={{ alignSelf: "flex-start", mt: 0.5 }} />
+                <Chip 
+                  label={seleccionado.estado_pago || seleccionado.estado || "pendiente"} 
+                  color={estadoColor(seleccionado.estado_pago || seleccionado.estado)} 
+                  size="small" 
+                  sx={{ alignSelf: "flex-start", mt: 0.5 }} 
+                />
               </Box>
               <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
-                <QRCode value={seleccionado.codigo || "sin-codigo"} size={160} />
+                <Typography variant="body2" color="text.secondary">
+                  Código: {seleccionado.codigo}
+                </Typography>
               </Box>
               <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
-                <Button variant="contained" onClick={() => descargarPDF(seleccionado.id)}>
+                <Button variant="contained" onClick={() => descargarPDF(seleccionado.id, seleccionado.codigo)}>
                   Descargar PDF
                 </Button>
                 <Button variant="outlined" onClick={() => setSeleccionado(null)}>
