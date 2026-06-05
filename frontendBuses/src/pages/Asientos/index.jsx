@@ -1,44 +1,72 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import {
-  Container, Typography, Box, Button, CircularProgress
+  Container, Typography, Box, Button, CircularProgress, Chip, Paper
 } from "@mui/material";
+import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
+import EventSeatIcon from "@mui/icons-material/EventSeat";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import api from "../../services/api";
 
-function Asiento({ asiento, seleccionados, onToggle, maxSeleccion }) {
-  const isSelected = seleccionados.includes(asiento.id);
-  const isOcupado = asiento.estado === "ocupado";
-  const lleno = seleccionados.length >= maxSeleccion && !isSelected;
+const MAX_ASIENTOS = 100;
 
-  const getBgColor = () => {
-    if (isOcupado) return "error.main";
-    if (isSelected) return "primary.main";
-    if (lleno) return "grey.300";
-    return "success.main";
+// Colores del sistema
+const COLORES = {
+  disponible: { bg: "#22c55e", hover: "#16a34a", label: "Disponible" },
+  seleccionado: { bg: "#2563eb", hover: "#1d4ed8", label: "Seleccionado" },
+  ocupado: { bg: "#e5e7eb", hover: "#e5e7eb", text: "#9ca3af", label: "Ocupado/Vendido" },
+};
+
+function SeatIcon({ estado, numero, isSelected, isLleno, onClick }) {
+  const getStyle = () => {
+    if (estado === "ocupado") return { bg: COLORES.ocupado.bg, text: COLORES.ocupado.text, cursor: "not-allowed", border: "2px solid #d1d5db" };
+    if (isSelected) return { bg: COLORES.seleccionado.bg, text: "#fff", cursor: "pointer", border: "2px solid #1d4ed8" };
+    if (isLleno) return { bg: "#f3f4f6", text: "#9ca3af", cursor: "not-allowed", border: "2px dashed #d1d5db" };
+    return { bg: COLORES.disponible.bg, text: "#fff", cursor: "pointer", border: "2px solid #16a34a" };
   };
+
+  const s = getStyle();
+  const disabled = estado === "ocupado" || isLleno;
 
   return (
     <Box
-      onClick={() => !isOcupado && !lleno && onToggle(asiento)}
+      onClick={!disabled ? onClick : undefined}
+      title={estado === "ocupado" ? "Asiento ocupado" : isLleno ? "Selecciona menos asientos" : `Asiento ${numero}`}
       sx={{
-        width: 40,
-        height: 40,
-        bgcolor: getBgColor(),
-        borderRadius: 1,
+        width: 48,
+        height: 52,
+        bgcolor: s.bg,
+        border: s.border,
+        borderRadius: "8px 8px 4px 4px",
         display: "flex",
+        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        cursor: isOcupado || lleno ? "not-allowed" : "pointer",
-        color: "white",
-        fontSize: 12,
-        fontWeight: "bold",
-        transition: "all 0.2s",
-        "&:hover": {
-          opacity: isOcupado || lleno ? 1 : 0.85,
-        },
+        cursor: s.cursor,
+        color: s.text,
+        transition: "all 0.15s ease",
+        position: "relative",
+        userSelect: "none",
+        "&:hover": !disabled ? {
+          transform: "scale(1.08)",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+        } : {},
+        "&::before": {
+          content: '""',
+          position: "absolute",
+          top: -6,
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: 28,
+          height: 6,
+          bgcolor: estado === "ocupado" ? "#d1d5db" : isSelected ? "#1e40af" : isLleno ? "#e5e7eb" : "#15803d",
+          borderRadius: "4px 4px 0 0",
+        }
       }}
     >
-      {asiento.numero}
+      <Typography sx={{ fontSize: 11, fontWeight: 700, lineHeight: 1 }}>
+        {numero}
+      </Typography>
     </Box>
   );
 }
@@ -47,7 +75,7 @@ export default function AsientosPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const rutaId = params.get("rutaId");
-  const pasajeros = Number(params.get("pasajeros")) || 1;
+  const pasajeros = Math.min(Number(params.get("pasajeros")) || 1, MAX_ASIENTOS);
 
   const [asientos, setAsientos] = useState([]);
   const [seleccionados, setSeleccionados] = useState([]);
@@ -57,12 +85,13 @@ export default function AsientosPage() {
   useEffect(() => {
     const loadAsientos = async () => {
       try {
-        const routeData = JSON.parse(localStorage.getItem('rutaSeleccionada') || 'null');
+        const routeData = JSON.parse(localStorage.getItem("rutaSeleccionada") || "null");
         setRutaSeleccionada(routeData);
         const { data } = await api.get(`/buses/${rutaId}/asientos`);
-        setAsientos(Array.isArray(data) ? data : []);
+        const lista = Array.isArray(data) ? data.slice(0, MAX_ASIENTOS) : [];
+        setAsientos(lista);
       } catch (err) {
-        console.error('Error cargando asientos:', err);
+        console.error("Error cargando asientos:", err);
       } finally {
         setLoading(false);
       }
@@ -71,10 +100,13 @@ export default function AsientosPage() {
   }, [rutaId]);
 
   const toggleAsiento = (asiento) => {
+    if (asiento.estado === "ocupado") return;
     setSeleccionados((prev) =>
       prev.includes(asiento.id)
         ? prev.filter((id) => id !== asiento.id)
-        : [...prev, asiento.id]
+        : prev.length < pasajeros
+        ? [...prev, asiento.id]
+        : prev
     );
   };
 
@@ -84,10 +116,11 @@ export default function AsientosPage() {
     .filter((a) => seleccionados.includes(a.id))
     .reduce((acc, a) => acc + Number(a.precio || 0), 0);
 
+  const disponibles = asientos.filter((a) => a.estado !== "ocupado").length;
+  const ocupados = asientos.filter((a) => a.estado === "ocupado").length;
+
   const handleContinuar = () => {
-    const asientosSeleccionados = asientos.filter((a) =>
-      seleccionados.includes(a.id)
-    );
+    const asientosSeleccionados = asientos.filter((a) => seleccionados.includes(a.id));
     localStorage.setItem("asientosSeleccionados", JSON.stringify(asientosSeleccionados));
     localStorage.setItem("rutaId", rutaId);
     if (rutaSeleccionada) {
@@ -96,96 +129,263 @@ export default function AsientosPage() {
     navigate("/pago");
   };
 
+  // Organizar asientos en filas de 4 (2 + pasillo + 2)
+  const organizarFila = (asientosPiso) => {
+    const filas = [];
+    for (let i = 0; i < asientosPiso.length; i += 4) {
+      filas.push(asientosPiso.slice(i, i + 4));
+    }
+    return filas;
+  };
+
   return (
-    <Container maxWidth="sm" sx={{ mt: 4 }}>
-      <Typography variant="h5" fontWeight="bold" color="primary" mb={1}>
-        Selecciona tu asiento
-      </Typography>
-      <Typography variant="body2" color="text.secondary" mb={2}>
-        Selecciona {pasajeros} asiento(s)
-      </Typography>
+    <Container maxWidth="sm" sx={{ mt: 3, mb: 6 }}>
+      {/* Header */}
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
+        <Box sx={{ p: 1, bgcolor: "primary.main", borderRadius: 2, display: "flex" }}>
+          <DirectionsBusIcon sx={{ color: "white", fontSize: 24 }} />
+        </Box>
+        <Box>
+          <Typography variant="h5" fontWeight={800} color="primary.dark" lineHeight={1.1}>
+            Selecciona tu asiento
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Debes seleccionar {pasajeros} asiento{pasajeros > 1 ? "s" : ""}
+          </Typography>
+        </Box>
+      </Box>
+
+      {/* Info de la ruta */}
       {rutaSeleccionada && (
-        <Box sx={{ mb: 3, p: 2, border: '1px solid', borderColor: 'grey.300', borderRadius: 2 }}>
-          <Typography variant="subtitle2" fontWeight="bold">Ruta seleccionada</Typography>
-          <Typography variant="body2">{rutaSeleccionada.origen} → {rutaSeleccionada.destino}</Typography>
-          <Typography variant="body2">Fecha: {new Date(rutaSeleccionada.fecha).toLocaleDateString()}</Typography>
-          <Typography variant="body2">Salida: {rutaSeleccionada.hora_salida}</Typography>
-          <Typography variant="body2">Precio por asiento: ${Number(rutaSeleccionada.precio || 0).toFixed(2)}</Typography>
+        <Paper elevation={0} sx={{ mb: 3, p: 2, bgcolor: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 3 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+            <Typography variant="subtitle2" fontWeight={700} color="primary.dark">
+              {rutaSeleccionada.origen}
+            </Typography>
+            <ArrowForwardIcon fontSize="small" color="primary" />
+            <Typography variant="subtitle2" fontWeight={700} color="primary.dark">
+              {rutaSeleccionada.destino}
+            </Typography>
+          </Box>
+          <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+            <Typography variant="caption" color="text.secondary">
+              📅 {new Date(rutaSeleccionada.fecha).toLocaleDateString("es-EC", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              🕐 Salida: {rutaSeleccionada.hora_salida}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              💵 ${Number(rutaSeleccionada.precio || 0).toFixed(2)} por asiento
+            </Typography>
+          </Box>
+        </Paper>
+      )}
+
+      {/* Estadísticas rápidas */}
+      {!loading && asientos.length > 0 && (
+        <Box sx={{ display: "flex", gap: 1.5, mb: 3, flexWrap: "wrap" }}>
+          <Chip
+            size="small"
+            label={`${disponibles} disponibles`}
+            sx={{ bgcolor: "#dcfce7", color: "#166534", fontWeight: 600, fontSize: 12 }}
+          />
+          <Chip
+            size="small"
+            label={`${ocupados} ocupados`}
+            sx={{ bgcolor: "#f1f5f9", color: "#64748b", fontWeight: 600, fontSize: 12 }}
+          />
+          <Chip
+            size="small"
+            label={`${asientos.length} asientos en total`}
+            sx={{ bgcolor: "#f0f9ff", color: "#0369a1", fontWeight: 600, fontSize: 12 }}
+          />
         </Box>
       )}
 
       {/* Leyenda */}
-      <Box sx={{ display: "flex", gap: 3, mb: 3 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Box sx={{ width: 20, height: 20, bgcolor: "success.main", borderRadius: 1 }} />
-          <Typography variant="caption">Disponible</Typography>
-        </Box>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Box sx={{ width: 20, height: 20, bgcolor: "primary.main", borderRadius: 1 }} />
-          <Typography variant="caption">Seleccionado</Typography>
-        </Box>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Box sx={{ width: 20, height: 20, bgcolor: "error.main", borderRadius: 1 }} />
-          <Typography variant="caption">Ocupado</Typography>
-        </Box>
+      <Box sx={{ display: "flex", gap: 2, mb: 3, p: 2, bgcolor: "#f8fafc", borderRadius: 2, flexWrap: "wrap" }}>
+        {Object.entries(COLORES).map(([key, val]) => (
+          <Box key={key} sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
+            <Box sx={{
+              width: 18,
+              height: 18,
+              bgcolor: val.bg,
+              borderRadius: 0.5,
+              border: key === "ocupado" ? "1.5px solid #d1d5db" : "none"
+            }} />
+            <Typography variant="caption" color="text.secondary" fontWeight={500}>
+              {val.label}
+            </Typography>
+          </Box>
+        ))}
       </Box>
 
       {loading && (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", mt: 6, flexDirection: "column", gap: 2 }}>
           <CircularProgress />
+          <Typography variant="body2" color="text.secondary">Cargando asientos...</Typography>
         </Box>
       )}
 
       {/* Mapa de asientos por piso */}
-      {!loading && pisos.map((piso) => (
-        <Box key={piso} sx={{ mb: 4 }}>
-          <Typography variant="subtitle1" fontWeight="bold" mb={2}>
-            Piso {piso}
-          </Typography>
-          <Box sx={{ display: "grid", gridTemplateColumns: "repeat(5, 40px)", gap: 1 }}>
-            {asientos
-              .filter((a) => a.piso === piso)
-              .map((a) => (
-                <Asiento
-                  key={a.id}
-                  asiento={a}
-                  seleccionados={seleccionados}
-                  onToggle={toggleAsiento}
-                  maxSeleccion={pasajeros}
-                />
-              ))}
+      {!loading && pisos.map((piso) => {
+        const asientosPiso = asientos.filter((a) => a.piso === piso);
+        const filas = organizarFila(asientosPiso);
+
+        return (
+          <Box key={piso} sx={{ mb: 4 }}>
+            {pisos.length > 1 && (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+                <Box sx={{ height: 1, flex: 1, bgcolor: "divider" }} />
+                <Chip label={`Piso ${piso}`} size="small" color="primary" variant="outlined" />
+                <Box sx={{ height: 1, flex: 1, bgcolor: "divider" }} />
+              </Box>
+            )}
+
+            {/* Representación del bus */}
+            <Paper elevation={1} sx={{
+              p: 2.5,
+              borderRadius: 3,
+              border: "2px solid #e2e8f0",
+              background: "linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)",
+            }}>
+              {/* Frente del bus */}
+              <Box sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 2,
+                pb: 1.5,
+                borderBottom: "2px dashed #e2e8f0"
+              }}>
+                <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ textTransform: "uppercase", letterSpacing: 1 }}>
+                  🚌 Frente
+                </Typography>
+                <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                  <Box sx={{ width: 32, height: 24, bgcolor: "#fef3c7", border: "1px solid #fcd34d", borderRadius: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Typography sx={{ fontSize: 10 }}>🚪</Typography>
+                  </Box>
+                  <Typography variant="caption" color="text.secondary">Puerta</Typography>
+                </Box>
+              </Box>
+
+              {/* Filas de asientos */}
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+                {filas.map((fila, filaIdx) => (
+                  <Box key={filaIdx} sx={{ display: "flex", gap: 1, justifyContent: "center", alignItems: "center" }}>
+                    {fila.slice(0, 2).map((asiento) => (
+                      <SeatIcon
+                        key={asiento.id}
+                        estado={asiento.estado}
+                        numero={asiento.numero}
+                        isSelected={seleccionados.includes(asiento.id)}
+                        isLleno={seleccionados.length >= pasajeros && !seleccionados.includes(asiento.id)}
+                        onClick={() => toggleAsiento(asiento)}
+                      />
+                    ))}
+                    {/* Pasillo */}
+                    <Box sx={{ width: 20 }} />
+                    {fila.slice(2, 4).map((asiento) => (
+                      <SeatIcon
+                        key={asiento.id}
+                        estado={asiento.estado}
+                        numero={asiento.numero}
+                        isSelected={seleccionados.includes(asiento.id)}
+                        isLleno={seleccionados.length >= pasajeros && !seleccionados.includes(asiento.id)}
+                        onClick={() => toggleAsiento(asiento)}
+                      />
+                    ))}
+                    {/* Número de fila */}
+                    <Typography variant="caption" color="text.disabled" sx={{ ml: 0.5, minWidth: 16 }}>
+                      {filaIdx + 1}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+
+              {/* Parte trasera del bus */}
+              <Box sx={{ mt: 2, pt: 1.5, borderTop: "2px dashed #e2e8f0", textAlign: "center" }}>
+                <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ textTransform: "uppercase", letterSpacing: 1 }}>
+                  🔙 Parte trasera
+                </Typography>
+              </Box>
+            </Paper>
           </Box>
-        </Box>
-      ))}
+        );
+      })}
 
       {!loading && asientos.length === 0 && (
-        <Typography color="text.secondary" textAlign="center" mt={4}>
-          No hay asientos disponibles.
-        </Typography>
-      )}
-
-      {/* Resumen */}
-      {seleccionados.length > 0 && (
-        <Box sx={{ bgcolor: "primary.50", border: "1px solid", borderColor: "primary.200", borderRadius: 2, p: 2, mb: 2 }}>
-          <Typography variant="body2">
-            Asientos seleccionados: <strong>{seleccionados.length}</strong> / {pasajeros}
-          </Typography>
-          <Typography variant="body2">
-            Total: <strong style={{ color: "#1976d2" }}>${totalPrecio.toFixed(2)}</strong>
-          </Typography>
+        <Box sx={{ textAlign: "center", py: 6 }}>
+          <EventSeatIcon sx={{ fontSize: 48, color: "text.disabled", mb: 1 }} />
+          <Typography color="text.secondary">No hay asientos disponibles para esta ruta.</Typography>
         </Box>
       )}
 
-      <Button
-        fullWidth
-        variant="contained"
-        size="large"
-        disabled={seleccionados.length < pasajeros}
-        onClick={handleContinuar}
-        sx={{ mt: 1 }}
-      >
-        Continuar con la compra
-      </Button>
+      {/* Panel de resumen pegado abajo */}
+      <Box sx={{ position: "sticky", bottom: 16, zIndex: 10 }}>
+        {/* Resumen de selección */}
+        {seleccionados.length > 0 && (
+          <Paper elevation={4} sx={{
+            p: 2,
+            mb: 1.5,
+            borderRadius: 3,
+            bgcolor: "#eff6ff",
+            border: "1.5px solid #93c5fd",
+          }}>
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <Box>
+                <Typography variant="body2" fontWeight={600} color="primary.dark">
+                  Asientos seleccionados
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {asientos.filter(a => seleccionados.includes(a.id)).map(a => `Asiento ${a.numero}`).join(", ")}
+                </Typography>
+              </Box>
+              <Box sx={{ textAlign: "right" }}>
+                <Typography variant="caption" color="text.secondary">Total</Typography>
+                <Typography variant="h6" fontWeight={800} color="primary.main">
+                  ${totalPrecio.toFixed(2)}
+                </Typography>
+              </Box>
+            </Box>
+            <Box sx={{ mt: 1, display: "flex", alignItems: "center", gap: 1 }}>
+              <Box sx={{ flex: 1, height: 6, bgcolor: "#bfdbfe", borderRadius: 3, overflow: "hidden" }}>
+                <Box sx={{
+                  height: "100%",
+                  width: `${(seleccionados.length / pasajeros) * 100}%`,
+                  bgcolor: "primary.main",
+                  borderRadius: 3,
+                  transition: "width 0.3s ease"
+                }} />
+              </Box>
+              <Typography variant="caption" color="primary.dark" fontWeight={600}>
+                {seleccionados.length}/{pasajeros}
+              </Typography>
+            </Box>
+          </Paper>
+        )}
+
+        <Button
+          fullWidth
+          variant="contained"
+          size="large"
+          disabled={seleccionados.length < pasajeros}
+          onClick={handleContinuar}
+          sx={{
+            py: 1.8,
+            borderRadius: 3,
+            fontWeight: 700,
+            fontSize: 16,
+            textTransform: "none",
+            boxShadow: seleccionados.length >= pasajeros ? "0 4px 20px rgba(37,99,235,0.4)" : "none",
+          }}
+          endIcon={<ArrowForwardIcon />}
+        >
+          {seleccionados.length < pasajeros
+            ? `Selecciona ${pasajeros - seleccionados.length} asiento${pasajeros - seleccionados.length > 1 ? "s" : ""} más`
+            : "Continuar con la compra"}
+        </Button>
+      </Box>
     </Container>
   );
 }
