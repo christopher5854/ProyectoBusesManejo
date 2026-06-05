@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import {
-  Container, Typography, Box, Button, CircularProgress, Chip, Paper
+  Container, Typography, Box, Button, CircularProgress, Chip, Paper, Alert
 } from "@mui/material";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import EventSeatIcon from "@mui/icons-material/EventSeat";
@@ -81,16 +81,27 @@ export default function AsientosPage() {
   const [seleccionados, setSeleccionados] = useState([]);
   const [loading, setLoading] = useState(true);
   const [rutaSeleccionada, setRutaSeleccionada] = useState(null);
+  const [error, setError] = useState("");
 
+  // UN SOLO useEffect que maneja todo
   useEffect(() => {
+    // Si hay una compra en proceso, redirigir al resumen
+    const compraEnProceso = localStorage.getItem("compraEnProceso");
+    if (compraEnProceso === "true") {
+      navigate("/pago");
+      return;
+    }
+    
     const loadAsientos = async () => {
       try {
         const routeData = JSON.parse(localStorage.getItem("rutaSeleccionada") || "null");
         setRutaSeleccionada(routeData);
+        
         const { data } = await api.get(`/buses/${rutaId}/asientos`);
         const lista = Array.isArray(data) ? data.slice(0, MAX_ASIENTOS) : [];
         setAsientos(lista);
-        // 🔧 Limpiar selección anterior al cargar una nueva ruta
+        
+        // Siempre empezar sin asientos seleccionados
         setSeleccionados([]);
       } catch (err) {
         console.error("Error cargando asientos:", err);
@@ -98,8 +109,9 @@ export default function AsientosPage() {
         setLoading(false);
       }
     };
+    
     loadAsientos();
-  }, [rutaId]);
+  }, [rutaId, navigate]);
 
   const toggleAsiento = (asiento) => {
     if (asiento.estado === "ocupado") return;
@@ -110,6 +122,8 @@ export default function AsientosPage() {
         ? [...prev, asiento.id]
         : prev
     );
+    // Limpiar error cuando el usuario selecciona/deselecciona
+    if (error) setError("");
   };
 
   const pisos = [...new Set(asientos.map((a) => a.piso))].sort();
@@ -123,11 +137,32 @@ export default function AsientosPage() {
 
   const handleContinuar = () => {
     const asientosSeleccionados = asientos.filter((a) => seleccionados.includes(a.id));
+    
+    // Verificar que haya seleccionado la cantidad correcta
+    if (asientosSeleccionados.length !== pasajeros) {
+      setError(`Debes seleccionar exactamente ${pasajeros} asiento${pasajeros > 1 ? "s" : ""}`);
+      return;
+    }
+    
+    // Calcular precio total
+    const precioUnitario = asientosSeleccionados[0]?.precio || rutaSeleccionada?.precio || 0;
+    const precioTotal = precioUnitario * asientosSeleccionados.length;
+    
     localStorage.setItem("asientosSeleccionados", JSON.stringify(asientosSeleccionados));
     localStorage.setItem("rutaId", rutaId);
+    
     if (rutaSeleccionada) {
-      localStorage.setItem("rutaSeleccionada", JSON.stringify(rutaSeleccionada));
+      const rutaConPrecio = {
+        ...rutaSeleccionada,
+        precio: rutaSeleccionada.precio || precioUnitario
+      };
+      localStorage.setItem("rutaSeleccionada", JSON.stringify(rutaConPrecio));
     }
+    
+    localStorage.setItem("precioTotal", precioTotal);
+    localStorage.setItem("precioUnitario", precioUnitario);
+    localStorage.setItem("compraEnProceso", "true");
+    
     navigate("/pago");
   };
 
@@ -157,6 +192,13 @@ export default function AsientosPage() {
         </Box>
       </Box>
 
+      {/* Mensaje de error */}
+      {error && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
       {/* Info de la ruta */}
       {rutaSeleccionada && (
         <Paper elevation={0} sx={{ mb: 3, p: 2, bgcolor: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 3 }}>
@@ -171,10 +213,10 @@ export default function AsientosPage() {
           </Box>
           <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
             <Typography variant="caption" color="text.secondary">
-              📅 {new Date(rutaSeleccionada.fecha).toLocaleDateString("es-EC", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+              📅 {rutaSeleccionada.fecha ? new Date(rutaSeleccionada.fecha).toLocaleDateString("es-EC", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) : "Fecha no disponible"}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              🕐 Salida: {rutaSeleccionada.hora_salida}
+              🕐 Salida: {rutaSeleccionada.hora_salida || "Hora no disponible"}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               💵 ${Number(rutaSeleccionada.precio || 0).toFixed(2)} por asiento
@@ -371,7 +413,7 @@ export default function AsientosPage() {
           fullWidth
           variant="contained"
           size="large"
-          disabled={seleccionados.length < pasajeros}
+          disabled={seleccionados.length !== pasajeros}
           onClick={handleContinuar}
           sx={{
             py: 1.8,
@@ -379,12 +421,14 @@ export default function AsientosPage() {
             fontWeight: 700,
             fontSize: 16,
             textTransform: "none",
-            boxShadow: seleccionados.length >= pasajeros ? "0 4px 20px rgba(37,99,235,0.4)" : "none",
+            boxShadow: seleccionados.length === pasajeros ? "0 4px 20px rgba(37,99,235,0.4)" : "none",
           }}
           endIcon={<ArrowForwardIcon />}
         >
           {seleccionados.length < pasajeros
             ? `Selecciona ${pasajeros - seleccionados.length} asiento${pasajeros - seleccionados.length > 1 ? "s" : ""} más`
+            : seleccionados.length > pasajeros
+            ? `Has seleccionado ${seleccionados.length - pasajeros} asiento${seleccionados.length - pasajeros > 1 ? "s" : ""} de más`
             : "Continuar con la compra"}
         </Button>
       </Box>
