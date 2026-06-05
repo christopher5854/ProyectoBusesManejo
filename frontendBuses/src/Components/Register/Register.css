@@ -1,0 +1,277 @@
+/* Register.css — Estilos del formulario de registro */
+.register {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f1a0a0 0%, #f1a0a0 100%);
+  padding: 20px;
+}
+
+.register__card {
+  background: white;
+  border-radius: 24px;
+  padding: 36px 40px;
+  width: 100%;
+  max-width: 520px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  animation: registerSlideUp 0.5s ease-out;
+}
+
+@keyframes registerSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── Logo ─── */
+.register__logo {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.register__logo-icon {
+  width: 52px;
+  height: 52px;
+  background: linear-gradient(135deg, #C62828, #8E0000);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 10px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.register__logo-name {
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  color: #111827;
+}
+
+.register__logo-sub {
+  font-size: 12px !important;
+  color: #6b7280;
+}
+
+/* ─── Stepper ─── */
+.register__stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 24px;
+}
+
+.register__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  opacity: 0.4;
+  transition: opacity 0.3s ease;
+}
+
+.register__step--active {
+  opacity: 1;
+}
+
+.register__step-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #6b7280;
+  transition: all 0.3s ease;
+}
+
+.register__step--active .register__step-circle {
+  background: linear-gradient(135deg, #C62828, #8E0000);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(198, 40, 40, 0.35);
+}
+
+.register__step-label {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.register__step--active .register__step-label {
+  color: #C62828 !important;
+}
+
+.register__step-line {
+  width: 60px;
+  height: 3px;
+  background: #e5e7eb;
+  border-radius: 2px;
+  margin: 0 12px;
+  margin-bottom: 18px;
+  transition: background 0.3s ease;
+}
+
+.register__step-line--active {
+  background: linear-gradient(135deg, #C62828, #8E0000);
+}
+
+/* ─── Alerts ─── */
+.register__alert {
+  margin-bottom: 16px !important;
+  border-radius: 12px !important;
+}
+
+/* ─── Form ─── */
+.register__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.register__title {
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  color: #111827;
+  text-align: center;
+}
+
+.register__subtitle {
+  font-size: 14px !important;
+  color: #6b7280;
+  text-align: center;
+  line-height: 1.5 !important;
+  margin-bottom: 4px !important;
+}
+
+.register__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.register__row {
+  display: flex;
+  gap: 12px;
+}
+
+.register__field--half {
+  flex: 1;
+}
+
+.register__label {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.register__input {
+  border-radius: 12px !important;
+}
+
+.register__input fieldset {
+  border-radius: 12px;
+}
+
+.register__input--code fieldset {
+  border-width: 2px;
+  border-color: #C62828;
+}
+
+/* ─── Button ─── */
+.register__btn {
+  background: linear-gradient(135deg, #C62828, #8E0000) !important;
+  padding: 12px !important;
+  font-weight: 600 !important;
+  border-radius: 40px !important;
+  text-transform: none !important;
+  font-size: 15px !important;
+  margin-top: 4px;
+  transition: all 0.2s ease !important;
+}
+
+.register__btn:hover {
+  background: linear-gradient(135deg, #8E0000, #C62828) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(198, 40, 40, 0.35) !important;
+}
+
+.register__btn:disabled {
+  opacity: 0.6 !important;
+  transform: none !important;
+}
+
+/* ─── Verify icon ─── */
+.register__verify-icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+/* ─── Footer ─── */
+.register__footer {
+  text-align: center;
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.register__footer-text {
+  font-size: 14px !important;
+  color: #6b7280;
+}
+
+.register__link {
+  color: #C62828;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.register__link:hover {
+  color: #8E0000;
+  text-decoration: underline;
+}
+
+.register__back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.register__back:hover {
+  color: #C62828 !important;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 540px) {
+  .register__card {
+    padding: 28px 20px;
+  }
+
+  .register__row {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .register__title {
+    font-size: 22px !important;
+  }
+}

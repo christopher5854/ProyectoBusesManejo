@@ -21,6 +21,7 @@ services:
     restart: always
     depends_on:
       - postgres
+    env_file: ./BackendBuses/.env
     environment:
       DB_HOST: postgres
       DB_PORT: 5432

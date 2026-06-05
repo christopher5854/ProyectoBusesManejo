@@ -129,6 +129,25 @@ const Login = () => {
           >
             {loading ? 'Ingresando...' : 'Ingresar'}
           </Button>
+
+          <Box sx={{ textAlign: 'center', mt: 1 }}>
+            <Typography sx={{ fontSize: 14, color: '#6b7280' }}>
+              ¿No tienes una cuenta?{' '}
+              <span
+                onClick={() => navigate('/register')}
+                style={{
+                  color: '#C62828',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'color 0.2s',
+                }}
+                onMouseEnter={(e) => (e.target.style.color = '#8E0000')}
+                onMouseLeave={(e) => (e.target.style.color = '#C62828')}
+              >
+                Regístrate
+              </span>
+            </Typography>
+          </Box>
         </Box>
       </Box>
     </Box>
