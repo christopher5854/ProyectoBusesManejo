@@ -4,6 +4,7 @@ import { AppBar, Toolbar, Typography, Button, Box } from "@mui/material";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../../Context/UserContext';
+import { useAuthStore } from '../../../store/authStore';
 import './Header.css';
 
 const Header = () => {
@@ -15,6 +16,7 @@ const Header = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('usuario');
     resetUsuario();
+    useAuthStore.getState().logout();
     navigate('/login', { replace: true });
   };
 
