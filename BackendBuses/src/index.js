@@ -8,24 +8,34 @@ app.use(express.json());
 
 const db = require('./config/db');
 
+const accesoRoutes = require('./routes/acceso.routes');
+app.use('/api/acceso', accesoRoutes);
+
+const estadisticasController = require('./controllers/estadisticas.controller');
+app.get('/api/estadisticas', estadisticasController.getEstadisticas);
+
+const hojaRutaController = require('./controllers/hojaRutaController');
+app.get('/api/hoja-ruta', hojaRutaController.getHojaRuta);
+
 // Rutas
 app.use('/api/rutas',      require('./routes/rutas'));
 app.use('/api/boletos',    require('./routes/boletos'));
 app.use('/api/usuarios',   require('./routes/usuarios'));
 app.use('/api/ciudades',   require('./routes/ciudades'));
 app.use('/api/auth',       require('./routes/auth.routes'));
-app.use('/api', require('./routes/validaciones.routes'));
-app.use('/api/tipo-descuento', require('./routes/descuento.routes'));
-app.use('/api/buses',      require('./routes/buses'));
 
 const frecuenciasRoutes = require('./routes/frecuencias');
 app.use('/api/frecuencias', frecuenciasRoutes);
+
+app.use('/api', require('./routes/validaciones.routes'));
+app.use('/api/tipo-descuento', require('./routes/descuento.routes'));
+app.use('/api/buses',      require('./routes/buses'));
 
 app.get('/', (req, res) => {
   res.json({ mensaje: 'API TransiSys funcionando' });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 db.connect()
   .then(() => {

@@ -5,8 +5,33 @@ const fs = require('fs');
 // GET /api/boletos
 const getBoletos = async (req, res) => {
   try {
-    res.json({ message: 'Lista de boletos - por implementar' });
+    const { usuario_id } = req.query;
+    const tokenUserId = req.user.id;
+    
+    // Si no hay usuario_id, usar el del token
+    const clienteId = usuario_id || tokenUserId;
+    
+    const result = await pool.query(
+      `SELECT b.id, b.codigo_boleto as codigo, b.precio_final, b.estado_pago as estado,
+              ci.nombre as origen, cd.nombre as destino,
+              r.fecha_ruta as fecha, fr.hora_salida,
+              a.numero as asiento,
+              u.nombres as nombre
+       FROM boleto b
+       JOIN ruta r ON b.ruta_id = r.id
+       JOIN frecuencia fr ON r.frecuencia_id = fr.id
+       JOIN ciudad ci ON fr.ciudad_origen_id = ci.id
+       JOIN ciudad cd ON fr.ciudad_destino_id = cd.id
+       JOIN asiento a ON b.asiento_id = a.id
+       JOIN usuario u ON b.cliente_id = u.id
+       WHERE b.cliente_id = $1
+       ORDER BY b.id DESC`,
+      [clienteId]
+    );
+    
+    res.json(result.rows);
   } catch (error) {
+    console.error('Error al obtener boletos:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -19,11 +44,11 @@ const getBoletoById = async (req, res) => {
 
     const result = await pool.query(
       `SELECT b.id, b.codigo_boleto, b.precio_base, b.descuento_aplicado, b.precio_final, 
-              b.estado_pago, b.estado_boleto, b.referencia_bancaria, b.comprobante_url, 
-              b.fecha_pago, b.fecha_validacion, b.fecha_emision,
+              b.estado_pago, b.estado, b.referencia_bancaria, b.comprobante_url, 
+              b.fecha_pago, b.fecha_emision,
               u.nombres as cliente_nombre, u.apellidos as cliente_apellidos, u.cedula as cliente_cedula,
               ci.nombre as ciudad_origen, cd.nombre as ciudad_destino,
-              a.numero_asiento, a.piso,
+              a.numero, a.piso,
               tp.nombre as tipo_asiento,
               r.fecha_ruta,
               fr.hora_salida
@@ -81,7 +106,7 @@ const createBoleto = async (req, res) => {
 
     // 1. Bloquear el asiento para evitar doble venta (SELECT FOR UPDATE)
     const asientoResult = await client.query(
-      'SELECT id, disponible, numero_asiento FROM asiento WHERE id = $1 AND activo = true FOR UPDATE',
+      'SELECT id, disponible, numero FROM asiento WHERE id = $1 AND disponible = true FOR UPDATE',
       [asiento_id]
     );
 
@@ -93,7 +118,7 @@ const createBoleto = async (req, res) => {
     const asiento = asientoResult.rows[0];
     if (!asiento.disponible) {
       await client.query('ROLLBACK');
-      return res.status(409).json({ message: `El asiento ${asiento.numero_asiento} ya no está disponible` });
+      return res.status(409).json({ message: `El asiento ${asiento.numero} ya no está disponible` });
     }
 
     // 2. Insertar el boleto con codigo_boleto
@@ -184,7 +209,7 @@ const validarPago = async (req, res) => {
     const oficinista_id = req.user.id;
 
     const boletoResult = await pool.query(
-      'SELECT id, estado_pago, estado_boleto FROM boleto WHERE id = $1',
+      'SELECT id, estado_pago, estado FROM boleto WHERE id = $1',
       [id]
     );
 
@@ -234,7 +259,7 @@ const generarQR = async (req, res) => {
               b.ciudad_abordaje_id, b.ciudad_destino_id, b.estado_pago,
               u.nombres as cliente_nombre, u.cedula as cliente_cedula,
               ci.nombre as ciudad_origen, cd.nombre as ciudad_destino,
-              a.numero_asiento
+              a.numero
        FROM boleto b
        JOIN usuario u ON b.cliente_id = u.id
        JOIN ciudad ci ON b.ciudad_abordaje_id = ci.id
@@ -256,7 +281,7 @@ const generarQR = async (req, res) => {
       boleto_id: boleto.id,
       pasajero: boleto.cliente_nombre,
       cedula: boleto.cliente_cedula,
-      asiento: boleto.numero_asiento,
+      asiento: boleto.numero,
       origen: boleto.ciudad_origen,
       destino: boleto.ciudad_destino,
       fecha: new Date().toISOString().split('T')[0]
@@ -292,7 +317,7 @@ const generarPDF = async (req, res) => {
               b.estado_pago, b.referencia_bancaria, b.fecha_pago, b.fecha_emision,
               u.nombres as cliente_nombre, u.apellidos as cliente_apellidos, u.cedula as cliente_cedula,
               ci.nombre as ciudad_origen, cd.nombre as ciudad_destino,
-              a.numero_asiento, a.piso,
+              a.numero, a.piso,
               tp.nombre as tipo_asiento,
               r.fecha_ruta,
               fr.hora_salida
@@ -346,7 +371,7 @@ const generarPDF = async (req, res) => {
     doc.text(`Destino: ${boleto.ciudad_destino}`);
     doc.text(`Fecha: ${new Date(boleto.fecha_ruta).toLocaleDateString()}`);
     doc.text(`Hora: ${boleto.hora_salida.substring(0, 5)}`);
-    doc.text(`Asiento: ${boleto.numero_asiento} (Piso ${boleto.piso})`);
+    doc.text(`Asiento: ${boleto.numero} (Piso ${boleto.piso})`);
     doc.text(`Tipo: ${boleto.tipo_asiento}`);
     doc.moveDown();
 
@@ -370,7 +395,7 @@ const generarPDF = async (req, res) => {
       boleto_id: boleto.id,
       pasajero: boleto.cliente_nombre,
       cedula: boleto.cliente_cedula,
-      asiento: boleto.numero_asiento,
+      asiento: boleto.numero,
       origen: boleto.ciudad_origen,
       destino: boleto.ciudad_destino
     };
@@ -456,7 +481,32 @@ const subirComprobante = async (req, res) => {
   });
 };
 
+const getBoletosPendientes = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT b.id, b.codigo_boleto, b.referencia_bancaria, b.comprobante_url,
+              u.nombres, u.apellidos, u.cedula,
+              ci.nombre as origen, cd.nombre as destino,
+              r.fecha_ruta, fr.hora_salida, a.numero as asiento
+       FROM boleto b
+       JOIN usuario u ON b.cliente_id = u.id
+       JOIN ruta r ON b.ruta_id = r.id
+       JOIN frecuencia fr ON r.frecuencia_id = fr.id
+       JOIN ciudad ci ON fr.ciudad_origen_id = ci.id
+       JOIN ciudad cd ON fr.ciudad_destino_id = cd.id
+       JOIN asiento a ON b.asiento_id = a.id
+       WHERE b.estado_pago = 'pagado'
+       ORDER BY b.id DESC`
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
+  getBoletosPendientes,
   getBoletos,
   getBoletoById,
   createBoleto,

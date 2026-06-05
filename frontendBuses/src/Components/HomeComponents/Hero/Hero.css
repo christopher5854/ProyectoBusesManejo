@@ -1,188 +1,189 @@
-/* ── Sección ── */
+/* FrontendBuses/src/Components/HomeComponents/Hero/Hero.css */
+
+/* ── Sección Hero ── */
 .hero {
-  padding: 3.5rem 2rem 0;
+  background: linear-gradient(135deg, #C62828 0%, #8E0000 100%);
+  padding: 60px 20px 80px;
+  color: white;
   text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 
-/* ── Tag ── */
+/* Etiqueta superior (📍 Rutas interprovinciales · Ecuador) */
 .hero__tag {
-  display: inline-flex;
+  display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 6px;
-  background-color: #FEF2F2;
-  color: #B91C1C;
-  border-radius: 20px;
-  padding: 5px 14px;
-  margin-bottom: 1.25rem;
+  gap: 8px;
+  margin-bottom: 24px;
 }
 
 .hero__tag-text {
-  font-size: 12px !important;
-  font-weight: 500 !important;
-  color: #B91C1C !important;
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  opacity: 0.9;
 }
 
-/* ── Título ── */
+/* Título principal (Viaja con Flota Pelileo desde donde estés) */
 .hero__title {
-  font-family: 'Sora', sans-serif !important;
-  font-size: 38px !important;
-  font-weight: 700 !important;
-  line-height: 1.2 !important;
-  margin-bottom: 0.75rem !important;
-  max-width: 520px;
+  font-size: 48px;
+  font-weight: 800;
+  margin-bottom: 16px;
+  line-height: 1.2;
+  text-align: center;
+}
+
+/* Para pantallas pequeñas */
+@media (max-width: 768px) {
+  .hero__title {
+    font-size: 32px;
+  }
 }
 
 .hero__title-accent {
-  color: #B91C1C;
+  color: #FFC107;
+  text-decoration: underline;
 }
 
-/* ── Subtítulo ── */
+/* Subtítulo (Compra tu pasaje en línea...) */
 .hero__subtitle {
-  font-size: 14px !important;
-  color: #6b7280 !important;
-  max-width: 400px;
-  margin: 0 auto 2rem !important;
-  line-height: 1.7 !important;
+  font-size: 18px;
+  max-width: 600px;
+  margin: 0 auto 48px;
+  opacity: 0.9;
+  text-align: center;
 }
 
-/* ── Buscador ── */
+/* Buscador blanco */
 .hero__search {
-  background-color: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 1.25rem;
-  width: 100%;
-  max-width: 600px;
-  margin-bottom: 1rem;
+  background: white;
+  border-radius: 20px;
+  padding: 24px;
+  max-width: 1000px;
+  margin: 0 auto;
+  box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.2);
+}
+
+/* Grid superior (Origen ↔ Destino) */
+.hero__search-grid {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.hero__field {
+  flex: 1;
   text-align: left;
 }
 
-.hero__search-grid {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  gap: 10px;
-  align-items: flex-end;
-  margin-bottom: 10px;
-}
-
-.hero__search-bottom {
-  display: flex;
-  gap: 8px;
-  align-items: flex-end;
-}
-
-/* ── Fields ── */
-.hero__field {
-  flex: 1;
-}
-
 .hero__field-label {
-  font-size: 10px !important;
-  font-weight: 500 !important;
-  color: #6b7280 !important;
+  font-size: 12px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
-  margin-bottom: 4px !important;
+  letter-spacing: 0.5px;
+  color: #6b7280;
+  margin-bottom: 6px;
   display: block;
 }
 
-.hero__input .MuiOutlinedInput-root {
-  border-radius: 8px !important;
-  font-size: 13px !important;
-  background-color: #ffffff;
+.hero__select,
+.hero__input {
+  background-color: #f9fafb;
+  border-radius: 12px;
+  width: 100%;
 }
 
-.hero__input .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
-  border-color: #B91C1C !important;
-}
-
-.hero__select {
-  border-radius: 8px !important;
-  font-size: 13px !important;
-  background-color: #ffffff;
-}
-
-.hero__select.Mui-focused .MuiOutlinedInput-notchedOutline {
-  border-color: #B91C1C !important;
-}
-
-/* ── Swap ── */
+/* Botón de intercambiar (flecha) */
 .hero__swap {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 1px solid #e5e7eb;
-  background-color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  flex-shrink: 0;
-  margin-bottom: 2px;
 }
 
 .hero__swap-icon {
-  font-size: 16px !important;
-  color: #6b7280;
+  color: #C62828;
+  font-size: 28px;
+  cursor: pointer;
+  transition: transform 0.2s;
 }
 
-/* ── Botón buscar ── */
+.hero__swap-icon:hover {
+  transform: rotate(180deg);
+}
+
+/* Grid inferior (Fecha, Pasajeros, Tipo de asiento, Botón Buscar) */
+.hero__search-bottom {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+/* Botón Buscar */
 .hero__btn-search {
-  background-color: #B91C1C !important;
-  color: #ffffff !important;
+  background-color: #C62828 !important;
+  padding: 10px 24px !important;
+  border-radius: 40px !important;
   text-transform: none !important;
-  border-radius: 8px !important;
-  font-size: 13px !important;
-  font-weight: 500 !important;
-  padding: 7px 20px !important;
-  box-shadow: none !important;
-  white-space: nowrap;
-  align-self: flex-end;
+  font-weight: 600 !important;
+  min-width: 120px;
 }
 
 .hero__btn-search:hover {
-  background-color: #991B1B !important;
-  box-shadow: none !important;
+  background-color: #8E0000 !important;
 }
 
-/* ── Pills ── */
+/* Rutas frecuentes */
 .hero__pills-wrap {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
   justify-content: center;
-  padding: 0.75rem 0 2.5rem;
+  align-items: center;
+  gap: 16px;
+  margin-top: 32px;
+  flex-wrap: wrap;
 }
 
 .hero__pills-label {
-  font-size: 12px !important;
-  color: #6b7280 !important;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .hero__pills {
   display: flex;
-  gap: 7px;
+  gap: 12px;
   flex-wrap: wrap;
-  justify-content: center;
 }
 
 .hero__pill {
-  background-color: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 20px;
-  padding: 5px 13px;
-  font-size: 12px;
-  color: #6b7280;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 6px 16px;
+  border-radius: 40px;
+  font-size: 13px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.2s;
 }
 
 .hero__pill:hover {
-  border-color: #fca5a5;
-  color: #B91C1C;
-  background-color: #FEF2F2;
+  background: rgba(255, 255, 255, 0.35);
+  transform: translateY(-2px);
+}
+
+/* Responsive para móviles */
+@media (max-width: 768px) {
+  .hero__search-grid {
+    flex-direction: column;
+  }
+  
+  .hero__search-bottom {
+    flex-direction: column;
+  }
+  
+  .hero__swap {
+    display: none;
+  }
+  
+  .hero__pills-wrap {
+    flex-direction: column;
+  }
 }

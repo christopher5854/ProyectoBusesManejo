@@ -1,9 +1,17 @@
-function BusRoute(){
+import { Navigate, Route, Routes } from 'react-router-dom';
+import ScannerQR from '../pages/bus-personal/ScannerQR';
 
-   return(
-      <h1>Bus Route</h1>
-   )
-
-}
+const BusRoute = () => {
+  return (
+    <Routes>
+      <Route path="/" element={<Navigate to="/bus/escaneo" replace />} />
+      <Route path="/escaneo" element={<ScannerQR />} />
+      <Route path="/mapa-asientos" element={<ScannerQR />} />
+      <Route path="/control-paradas" element={<ScannerQR />} />
+      <Route path="/vender-boleto" element={<ScannerQR />} />
+      <Route path="/reporte" element={<ScannerQR />} />
+    </Routes>
+  );
+};
 
 export default BusRoute;

@@ -1,30 +1,45 @@
 const express = require('express');
 const router = express.Router();
-const frecuenciaController = require('../controllers/frecuenciaController');
-const paradaController = require('../controllers/paradaController');
-const hojaRutaController = require('../controllers/hojaRutaController');
-const rutaController = require('../controllers/rutaController');
-const { verificarToken, roleGuard } = require('../middlewares/roleGuard');
+const { pool } = require('../config/db');
+const { buscarFrecuencias } = require('../controllers/frecuenciaController');
 
-// Rutas de Frecuencias (públicas: GET, protegidas: POST, PUT)
-router.get('/', frecuenciaController.listarFrecuencias);
-router.post('/', verificarToken, roleGuard(['admin', 'cooperativa']), frecuenciaController.crearFrecuencia);
-router.put('/:id', verificarToken, roleGuard(['admin', 'cooperativa']), frecuenciaController.actualizarFrecuencia);
-router.get('/buscar', frecuenciaController.buscarFrecuencias);
+// GET /api/frecuencias - Listar todas las frecuencias
+router.get('/', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT f.id, f.hora_salida, f.precio, f.tipo_viaje,
+              c1.nombre as origen, c2.nombre as destino
+       FROM frecuencia f
+       JOIN ciudad c1 ON f.ciudad_origen_id = c1.id
+       JOIN ciudad c2 ON f.ciudad_destino_id = c2.id
+       WHERE f.activa = true
+       ORDER BY f.id`
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al obtener frecuencias' });
+  }
+});
 
-// Rutas de Paradas Intermedias (públicas: GET, protegidas: POST, DELETE)
-router.get('/:frecuenciaId/paradas', paradaController.listarParadas);
-router.post('/:frecuenciaId/paradas', verificarToken, roleGuard(['admin', 'cooperativa']), paradaController.agregarParada);
-router.delete('/:frecuenciaId/paradas/:paradaId', verificarToken, roleGuard(['admin', 'cooperativa']), paradaController.eliminarParada);
+// POST /api/frecuencias - Crear nueva frecuencia
+router.post('/', async (req, res) => {
+  const { origen, destino, hora_salida, precio, tipo_viaje } = req.body;
+  try {
+    const result = await pool.query(
+      `INSERT INTO frecuencia (cooperativa_id, ciudad_origen_id, ciudad_destino_id, hora_salida, precio, tipo_viaje, activa)
+       VALUES (1, (SELECT id FROM ciudad WHERE nombre = $1), (SELECT id FROM ciudad WHERE nombre = $2), $3, $4, $5, true)
+       RETURNING *`,
+      [origen, destino, hora_salida, precio, tipo_viaje || 'ordinario']
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al crear frecuencia' });
+  }
+});
 
-// Rutas de Hoja de Ruta (públicas: GET, protegidas: POST)
-router.get('/hojas-ruta', hojaRutaController.listarHojas);
-router.post('/hojas-ruta', verificarToken, roleGuard(['admin', 'cooperativa']), hojaRutaController.crearHojaManual);
-router.post('/hojas-ruta/generar', verificarToken, roleGuard(['admin', 'cooperativa']), hojaRutaController.generarAutomatico);
-
-// Rutas de Rutas Diarias (públicas: GET, protegida: PUT)
-router.get('/rutas', rutaController.listarRutas);
-router.get('/rutas/:id', rutaController.detalleRuta);
-router.put('/rutas/:id', verificarToken, roleGuard(['admin', 'cooperativa']), rutaController.actualizarEstadoRuta);
+// GET /api/frecuencias/buscar - Buscar frecuencias por origen, destino y fecha
+router.get('/buscar', buscarFrecuencias);
 
 module.exports = router;

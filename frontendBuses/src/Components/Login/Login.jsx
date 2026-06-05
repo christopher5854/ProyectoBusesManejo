@@ -2,9 +2,8 @@ import { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, Box, Button, TextField, Typography } from '@mui/material';
 import { UserContext } from '../../Context/UserContext';
+import api from '../../services/api';
 import './Login.css';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const Login = () => {
   const { setUsuario } = useContext(UserContext);
@@ -22,24 +21,28 @@ const Login = () => {
   };
 
   const redirigirPorRol = (rol) => {
-    switch (rol) {
+    const normalizedRol = String(rol || '').toLowerCase();
+
+    switch (normalizedRol) {
       case 'admin':
-        navigate('/admin/dashboard');
+        navigate('/admin/dashboard', { replace: true });
         break;
       case 'oficinista':
-        navigate('/oficina/ventas');
+        navigate('/oficinista/dashboard', { replace: true });
         break;
       case 'cliente':
-        navigate('/home');
+      case 'client':
+        navigate('/home', { replace: true });
         break;
       case 'personal_bus':
-        navigate('/bus/escaneo');
+      case 'personal bus':
+        navigate('/bus/escaneo', { replace: true });
         break;
       case 'cooperativa':
-        navigate('/cooperativa/dashboard');
+        navigate('/cooperativa/dashboard', { replace: true });
         break;
       default:
-        navigate('/home');
+        navigate('/home', { replace: true });
     }
   };
 
@@ -48,20 +51,9 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.message || 'Error al iniciar sesion');
-        return;
-      }
-
+      const { data } = await api.post('/auth/login', form);
       localStorage.setItem('token', data.token);
+      localStorage.setItem('usuario', JSON.stringify(data.usuario));
 
       setUsuario({
         id: data.usuario.id,
@@ -73,8 +65,9 @@ const Login = () => {
       });
 
       redirigirPorRol(data.usuario.rol);
-    } catch {
-      setError('No se pudo conectar con el servidor');
+    } catch (error) {
+      const message = error.response?.data?.message || error.message || 'No se pudo conectar con el servidor';
+      setError(message);
     } finally {
       setLoading(false);
     }

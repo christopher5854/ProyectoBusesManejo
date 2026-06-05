@@ -1,12 +1,22 @@
 "use client";
-//import { useContext, useState } from "react";
-import {AppBar,Toolbar,Typography,Button,Box,} from "@mui/material";
+import { useContext } from 'react';
+import { AppBar, Toolbar, Typography, Button, Box } from "@mui/material";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import { useNavigate } from 'react-router-dom';
+import { UserContext } from '../../../Context/UserContext';
 import './Header.css';
 
 const Header = () => {
   const navigate = useNavigate();
+  const { resetUsuario } = useContext(UserContext);
+  const isAuthenticated = Boolean(localStorage.getItem('token'));
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('usuario');
+    resetUsuario();
+    navigate('/login', { replace: true });
+  };
 
   return (
     <AppBar position="static" elevation={0} className="header">
@@ -34,19 +44,28 @@ const Header = () => {
           ))}
         </Box>
 
-        {/* Actions */}
         <Box className="header__actions">
-          <Button
-            variant="outlined"
-            size="small"
-            className="header__btn-ghost"
-            onClick={() => navigate('/login')}
-          >
-            Iniciar sesión
-          </Button>
+          {!isAuthenticated && (
+            <Button
+              variant="outlined"
+              size="small"
+              className="header__btn-ghost"
+              onClick={() => navigate('/login')}
+            >
+              Iniciar sesión
+            </Button>
+          )}
           <Button variant="contained" size="small" className="header__btn-primary">
             Comprar pasaje
           </Button>
+          <Button color="inherit" onClick={() => navigate('/historial')}>
+            Mi historial
+          </Button>
+          {isAuthenticated && (
+            <Button color="inherit" onClick={handleLogout}>
+              Cerrar sesión
+            </Button>
+          )}
         </Box>
 
       </Toolbar>
