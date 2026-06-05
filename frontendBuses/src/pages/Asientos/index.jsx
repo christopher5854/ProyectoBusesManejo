@@ -101,12 +101,8 @@ export default function AsientosPage() {
         const lista = Array.isArray(data) ? data.slice(0, MAX_ASIENTOS) : [];
         setAsientos(lista);
         
-        // Cargar asientos ya seleccionados previamente (cuando viene de un retroceso)
-        const asientosGuardados = JSON.parse(localStorage.getItem("asientosSeleccionados") || "[]");
-        if (asientosGuardados.length > 0 && !compraEnProceso) {
-          const idsSeleccionados = asientosGuardados.map(a => a.id);
-          setSeleccionados(idsSeleccionados);
-        }
+        // Siempre empezar sin asientos seleccionados
+        setSeleccionados([]);
       } catch (err) {
         console.error("Error cargando asientos:", err);
       } finally {

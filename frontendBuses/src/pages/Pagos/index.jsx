@@ -26,7 +26,6 @@ export default function PagoPage() {
     const ruta = JSON.parse(localStorage.getItem("rutaSeleccionada") || "null");
     const asientos = JSON.parse(localStorage.getItem("asientosSeleccionados") || "[]");
     
-    // Usar setTimeout para evitar el warning
     const timer = setTimeout(() => {
       setRutaSeleccionada(ruta);
       setAsientosSeleccionados(asientos);
@@ -160,98 +159,94 @@ export default function PagoPage() {
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-        {/* PASO 0: RESUMEN */}
-        {paso === 0 && (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            <Typography variant="h6" fontWeight="bold">Resumen de tu compra</Typography>
+      {/* PASO 0: RESUMEN */}
+      {paso === 0 && (
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+          <Typography variant="h6" fontWeight="bold">Resumen de tu compra</Typography>
 
-            {/* Información de la ruta */}
-            <Paper elevation={2} sx={{ p: 2, bgcolor: "#f8fafc", borderRadius: 3 }}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                📍 Ruta
+          <Paper elevation={2} sx={{ p: 2, bgcolor: "#f8fafc", borderRadius: 3 }}>
+            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+              📍 Ruta
+            </Typography>
+            <Typography variant="h6" fontWeight="bold">
+              {rutaSeleccionada?.origen || "Origen"} → {rutaSeleccionada?.destino || "Destino"}
+            </Typography>
+            <Box sx={{ display: "flex", gap: 2, mt: 1, flexWrap: "wrap" }}>
+              <Typography variant="body2">
+                📅 {rutaSeleccionada?.fecha ? new Date(rutaSeleccionada.fecha).toLocaleDateString("es-EC") : "Fecha no disponible"}
               </Typography>
-              <Typography variant="h6" fontWeight="bold">
-                {rutaSeleccionada?.origen || "Origen"} → {rutaSeleccionada?.destino || "Destino"}
+              <Typography variant="body2">
+                🕐 {rutaSeleccionada?.hora_salida || "Hora no disponible"}
               </Typography>
-              <Box sx={{ display: "flex", gap: 2, mt: 1, flexWrap: "wrap" }}>
-                <Typography variant="body2">
-                  📅 {rutaSeleccionada?.fecha ? new Date(rutaSeleccionada.fecha).toLocaleDateString("es-EC") : "Fecha no disponible"}
-                </Typography>
-                <Typography variant="body2">
-                  🕐 {rutaSeleccionada?.hora_salida || "Hora no disponible"}
-                </Typography>
-              </Box>
-            </Paper>
+            </Box>
+          </Paper>
 
-            {/* Asientos seleccionados */}
-            <Paper elevation={2} sx={{ p: 2, bgcolor: "#f8fafc", borderRadius: 3 }}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                💺 Asientos seleccionados
-              </Typography>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
-                {asientosSeleccionados.map((asiento) => (
-                  <Chip
-                    key={asiento.id}
-                    label={`Asiento ${asiento.numero} - Piso ${asiento.piso}`}
-                    size="small"
-                    color="primary"
-                    variant="outlined"
-                  />
-                ))}
-              </Box>
-              <Typography variant="body2" color="text.secondary">
-                Precio por asiento: ${(() => {
-                  const precio = Number(asientosSeleccionados[0]?.precio) || Number(rutaSeleccionada?.precio) || 0;
-                  return precio.toFixed(2);
+          <Paper elevation={2} sx={{ p: 2, bgcolor: "#f8fafc", borderRadius: 3 }}>
+            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+              💺 Asientos seleccionados
+            </Typography>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
+              {asientosSeleccionados.map((asiento) => (
+                <Chip
+                  key={asiento.id}
+                  label={`Asiento ${asiento.numero} - Piso ${asiento.piso}`}
+                  size="small"
+                  color="primary"
+                  variant="outlined"
+                />
+              ))}
+            </Box>
+            <Typography variant="body2" color="text.secondary">
+              Precio por asiento: ${(() => {
+                const precio = Number(asientosSeleccionados[0]?.precio) || Number(rutaSeleccionada?.precio) || 0;
+                return precio.toFixed(2);
+              })()}
+            </Typography>
+          </Paper>
+
+          <Paper elevation={3} sx={{ p: 2, bgcolor: "#e0f2fe", borderRadius: 3, border: "1px solid #7dd3fc" }}>
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <Typography variant="h6" fontWeight="bold">Total a pagar</Typography>
+              <Typography variant="h5" fontWeight="bold" color="primary.main">
+                ${(() => {
+                  const total = asientosSeleccionados.reduce((sum, asiento) => {
+                    const precio = Number(asiento?.precio) || 0;
+                    return sum + precio;
+                  }, 0);
+                  return total.toFixed(2);
                 })()}
               </Typography>
-            </Paper>
-
-            {/* Total a pagar */}
-            <Paper elevation={3} sx={{ p: 2, bgcolor: "#e0f2fe", borderRadius: 3, border: "1px solid #7dd3fc" }}>
-              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <Typography variant="h6" fontWeight="bold">Total a pagar</Typography>
-                <Typography variant="h5" fontWeight="bold" color="primary.main">
-                  ${(() => {
-                    const total = asientosSeleccionados.reduce((sum, asiento) => {
-                      const precio = Number(asiento?.precio) || 0;
-                      return sum + precio;
-                    }, 0);
-                    return total.toFixed(2);
-                  })()}
-                </Typography>
-              </Box>
-              <Typography variant="caption" color="text.secondary">
-                {asientosSeleccionados.length} asiento{asientosSeleccionados.length !== 1 ? "s" : ""}
-              </Typography>
-            </Paper>
-
-            {/* Botones de acción */}
-            <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-              <Button
-                variant="outlined"
-                size="large"
-                onClick={() => {
-                  localStorage.removeItem("compraEnProceso");
-                  navigate("/");
-                }}
-                sx={{ py: 1.5, borderRadius: 3, flex: 1 }}
-              >
-                Cancelar compra
-              </Button>
-              <Button
-                variant="contained"
-                size="large"
-                onClick={() => setPaso(1)}
-                sx={{ py: 1.5, borderRadius: 3, flex: 2 }}
-              >
-                Continuar con los datos del pasajero
-              </Button>
             </Box>
-          </Box>
-        )}
+            <Typography variant="caption" color="text.secondary">
+              {asientosSeleccionados.length} asiento{asientosSeleccionados.length !== 1 ? "s" : ""}
+            </Typography>
+          </Paper>
 
-      {/* PASO 1: DATOS DEL PASAJERO (CON VALIDACIONES) */}
+          <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+            <Button
+              variant="outlined"
+              size="large"
+              onClick={() => {
+                localStorage.removeItem("compraEnProceso");
+                navigate("/");
+              }}
+              sx={{ py: 1.5, borderRadius: 3, flex: 1 }}
+            >
+              Cancelar compra
+            </Button>
+            <Button
+              variant="contained"
+              size="large"
+              onClick={() => setPaso(1)}
+              sx={{ py: 1.5, borderRadius: 3, flex: 2 }}
+            >
+              Continuar con los datos del pasajero
+            </Button>
+          </Box>
+        </Box>
+      )}
+
+      {/* PASO 1: DATOS DEL PASAJERO */}
       {paso === 1 && (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <Typography variant="h6">Datos del pasajero</Typography>
@@ -323,7 +318,7 @@ export default function PagoPage() {
         </Box>
       )}
 
-      {/* PASO 2: MÉTODO DE PAGO (CON VALIDACIONES) */}
+      {/* PASO 2: MÉTODO DE PAGO */}
       {paso === 2 && (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <Typography variant="h6">Método de pago</Typography>
@@ -406,10 +401,9 @@ export default function PagoPage() {
               Descargar PDF
             </Button>
             <Button variant="contained" onClick={() => {
-                    localStorage.removeItem("compraEnProceso"); // Limpiar flag
-                    navigate("/");
-                  }}
-                >
+              localStorage.removeItem("compraEnProceso");
+              navigate("/");
+            }}>
               Adquirir otro boleto
             </Button>
           </Box>
