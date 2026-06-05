@@ -47,11 +47,10 @@
 
 /* Subtítulo (Compra tu pasaje en línea...) */
 .hero__subtitle {
-  font-size: 18px;
-  max-width: 600px;
-  margin: 0 auto 48px;
-  opacity: 0.9;
   text-align: center;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Buscador blanco */
@@ -167,6 +166,28 @@
 .hero__pill:hover {
   background: rgba(255, 255, 255, 0.35);
   transform: translateY(-2px);
+}
+
+/* Forzar que el contenedor del subtítulo ocupe todo el ancho */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.hero__subtitle {
+  text-align: center !important;
+  width: 100% !important;
+  max-width: 700px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  display: block !important;
+}
+
+/* También asegurar que el Typography de MUI no interfiera */
+.MuiTypography-root {
+  width: 100%;
 }
 
 /* Responsive para móviles */
