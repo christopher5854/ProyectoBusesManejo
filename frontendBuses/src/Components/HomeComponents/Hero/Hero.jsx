@@ -61,10 +61,10 @@ const Hero = () => {
         </span><br />desde donde estés
       </Typography>
 
-      <Typography className="hero__subtitle">
+      <p className="hero__subtitle" style={{ textAlign: 'center', maxWidth: '700px', margin: '0 auto 48px auto' }}>
         Compra tu pasaje en línea, elige tu asiento y recibe tu código QR al instante.
         Sin filas, sin complicaciones.
-      </Typography>
+      </p>
 
       <Box className="hero__search">
 
