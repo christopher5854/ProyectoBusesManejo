@@ -37,6 +37,8 @@ router.get('/buscar', async (req, res) => {
   const query = `
     SELECT
       r.id,
+      ci.id as ciudad_origen_id,
+      cd.id as ciudad_destino_id,
       ci.nombre as origen,
       cd.nombre as destino,
       fr.hora_salida,
@@ -59,7 +61,7 @@ router.get('/buscar', async (req, res) => {
       AND cd.nombre = $2
       AND r.fecha_ruta = $3
       AND r.estado = 'programada'
-    GROUP BY r.id, ci.nombre, cd.nombre, fr.hora_salida, fr.precio, 
+    GROUP BY r.id, ci.id, cd.id, ci.nombre, cd.nombre, fr.hora_salida, fr.precio, 
              r.fecha_ruta, b.placa, b.capacidad_total, co.nombre
     ORDER BY fr.hora_salida
   `;
