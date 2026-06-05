@@ -23,6 +23,7 @@ export default function PagoPage() {
   const getToken = () => localStorage.getItem("token");
 
   const crearBoleto = async () => {
+    setError(""); 
   const token = getToken();
   if (!token) {
     setError("No has iniciado sesión. Por favor, inicia sesión primero.");
@@ -58,6 +59,7 @@ export default function PagoPage() {
 };
 
   const registrarPago = async () => {
+    setError("");  // Limpia errores anteriores
     try {
       await api.put(`/boletos/${boletoCreado.id}/pago`, {
         referencia_bancaria: datos.referencia,
@@ -119,45 +121,117 @@ export default function PagoPage() {
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-      {paso === 0 && (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <Typography variant="h6">Datos del pasajero</Typography>
-          {["cedula", "nombre", "email", "telefono"].map((field) => (
+        {paso === 0 && (
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <Typography variant="h6">Datos del pasajero</Typography>
+            <Typography variant="caption" color="error" sx={{ mb: 1 }}>
+              * Todos los campos son obligatorios
+            </Typography>
+            
             <TextField
-              key={field}
-              label={field.charAt(0).toUpperCase() + field.slice(1)}
-              name={field}
-              value={datos[field]}
+              label="Cédula *"
+              name="cedula"
+              value={datos.cedula}
               onChange={handleChange}
               fullWidth
+              error={datos.cedula.trim() === ""}
+              helperText={datos.cedula.trim() === "" ? "La cédula es obligatoria" : ""}
             />
-          ))}
-          <Button variant="contained" size="large" onClick={crearBoleto}>
-            Continuar
-          </Button>
-        </Box>
-      )}
+            
+            <TextField
+              label="Nombre completo *"
+              name="nombre"
+              value={datos.nombre}
+              onChange={handleChange}
+              fullWidth
+              error={datos.nombre.trim() === ""}
+              helperText={datos.nombre.trim() === "" ? "El nombre es obligatorio" : ""}
+            />
+            
+            <TextField
+              label="Correo electrónico *"
+              name="email"
+              type="email"
+              value={datos.email}
+              onChange={handleChange}
+              fullWidth
+              error={datos.email.trim() === "" || !datos.email.includes("@")}
+              helperText={
+                datos.email.trim() === "" 
+                  ? "El correo es obligatorio" 
+                  : !datos.email.includes("@") 
+                    ? "Ingresa un correo válido (ej: nombre@gmail.com)" 
+                    : ""
+              }
+            />
+            
+            <TextField
+              label="Teléfono *"
+              name="telefono"
+              value={datos.telefono}
+              onChange={handleChange}
+              fullWidth
+              error={datos.telefono.trim() === ""}
+              helperText={datos.telefono.trim() === "" ? "El teléfono es obligatorio" : ""}
+            />
+            
+            <Button 
+              variant="contained" 
+              size="large" 
+              onClick={crearBoleto}
+              disabled={
+                datos.cedula.trim() === "" ||
+                datos.nombre.trim() === "" ||
+                datos.email.trim() === "" ||
+                !datos.email.includes("@") ||
+                datos.telefono.trim() === ""
+              }
+            >
+              Continuar
+            </Button>
+          </Box>
+        )}
 
-      {paso === 1 && (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <Typography variant="h6">Método de pago</Typography>
-          <RadioGroup name="metodoPago" value={datos.metodoPago} onChange={handleChange}>
-            <FormControlLabel value="Transferencia" control={<Radio />} label="Transferencia bancaria" />
-            <FormControlLabel value="Depósito" control={<Radio />} label="Depósito bancario" />
-            <FormControlLabel value="Efectivo" control={<Radio />} label="Efectivo" />
-          </RadioGroup>
-          <TextField
-            label="Número de referencia"
-            name="referencia"
-            value={datos.referencia}
-            onChange={handleChange}
-            fullWidth
-          />
-          <Button variant="contained" size="large" disabled={!datos.metodoPago} onClick={registrarPago}>
-            Registrar pago
-          </Button>
-        </Box>
-      )}
+        {paso === 1 && (
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <Typography variant="h6">Método de pago</Typography>
+            <Typography variant="caption" color="error" sx={{ mb: 1 }}>
+              * Todos los campos son obligatorios
+            </Typography>
+            
+            <RadioGroup name="metodoPago" value={datos.metodoPago} onChange={handleChange}>
+              <FormControlLabel value="Transferencia" control={<Radio />} label="Transferencia bancaria" />
+              <FormControlLabel value="Depósito" control={<Radio />} label="Depósito bancario" />
+              <FormControlLabel value="Efectivo" control={<Radio />} label="Efectivo" />
+            </RadioGroup>
+            
+            <TextField
+              label="Número de referencia *"
+              name="referencia"
+              value={datos.referencia}
+              onChange={handleChange}
+              fullWidth
+              error={datos.metodoPago !== "Efectivo" && datos.referencia.trim() === ""}
+              helperText={
+                datos.metodoPago !== "Efectivo" && datos.referencia.trim() === "" 
+                  ? "El número de referencia es obligatorio para transferencia o depósito" 
+                  : ""
+              }
+            />
+            
+            <Button 
+              variant="contained" 
+              size="large" 
+              onClick={registrarPago}
+              disabled={
+                !datos.metodoPago ||
+                (datos.metodoPago !== "Efectivo" && datos.referencia.trim() === "")
+              }
+            >
+              Registrar pago
+            </Button>
+          </Box>
+        )}
 
       {paso === 2 && (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
